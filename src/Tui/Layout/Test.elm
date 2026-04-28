@@ -8,11 +8,11 @@ module Tui.Layout.Test exposing
 
 {-| Test helpers for apps built with [`Layout.compileApp`](Tui-Layout#compileApp).
 
-These build on [`TuiTest.ensureModel`](Test-Tui#ensureModel) to query
+These build on [`TuiTest.ensureModel`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Test-Tui#ensureModel) to query
 the opaque `FrameworkModel` for focus, selection, and scroll state — no
 need to render debug info in your view or parse the screen output.
 
-Each helper returns a `List` of [`Test.Tui.Step`](Test-Tui#Step) values
+Each helper returns a `List` of [`Test.Tui.Step`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Test-Tui#Step) values
 so it composes with `++` against the rest of your scenario:
 
     import Tui.Layout.Test as LayoutTest

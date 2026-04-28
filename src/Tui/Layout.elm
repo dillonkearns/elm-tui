@@ -801,7 +801,7 @@ group =
     Tui.Keybinding.group
 
 
-{-| Create a binding with any [`Tui.Sub.Key`](Tui#Key).
+{-| Create a binding with any [`Tui.Sub.Key`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#Key).
 
     Layout.binding (Tui.Sub.Character 'c') "Commit" OpenCommitDialog
 
@@ -4958,7 +4958,7 @@ type FrameworkModel model msg
 
 
 {-| Get the currently focused pane ID from a `FrameworkModel`. Useful in tests
-with [`TuiTest.ensureModel`](Test-Tui#ensureModel) — see [`Tui.Layout.Test`](Tui-Layout-Test)
+with [`TuiTest.ensureModel`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Test-Tui#ensureModel) — see [`Tui.Layout.Test`](Tui-Layout-Test)
 for convenient wrappers.
 -}
 frameworkFocusedPane : FrameworkModel model msg -> Maybe String
@@ -4992,7 +4992,7 @@ frameworkUserModel (FrameworkModel fw) =
 type FrameworkMsg msg
     = UserMsg msg
     | KeyPressed Tui.Sub.KeyEvent
-    | Mouse Tui.Sub.MouseEvent
+    | Mouse MouseEvent
     | GotPaste String
     | GotContext { width : Int, height : Int }
     | StatusTick
@@ -5022,14 +5022,14 @@ type alias PickerInteractionState =
 
 
 {-| Transform a declarative TUI app configuration into a
-[`Tui.ProgramConfig`](Tui#ProgramConfig).
+[`Tui.ProgramConfig`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#ProgramConfig).
 
 The user describes WHAT (panes, actions, status, modals) and `compileApp`
 handles HOW (rendering, key routing, subscriptions, state management). The
-result is a [`Tui.ProgramConfig`](Tui#ProgramConfig); wrap it with
-[`Tui.program`](Tui#program) and finalize with
-[`Tui.toScript`](Tui#toScript) to produce a runnable `Script`, or pass it
-directly to [`Test.Tui.start`](Test-Tui#start) for pure-Elm tests.
+result is a [`Tui.ProgramConfig`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#ProgramConfig); wrap it with
+[`Tui.program`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#program) and finalize with
+[`Tui.toScript`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#toScript) to produce a runnable `Script`, or pass it
+directly to [`Test.Tui.start`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Test-Tui#start) for pure-Elm tests.
 
     run : Script
     run =
@@ -5179,7 +5179,7 @@ runAsEffect msg =
     Effect.perform identity (succeedTask msg)
 
 
-succeedTask : a -> BackendTask.BackendTask FatalError.FatalError a
+succeedTask : a -> BackendTask FatalError a
 succeedTask a =
     BackendTask.succeed a
 
@@ -6006,7 +6006,7 @@ applyUserMsg config msg (FrameworkModel fw) =
         -- Check if modal kind changed
         newModalState : ModalInteractionState msg
         newModalState =
-            syncModalState config fw.modalState fw.userModel newUserModel
+            syncModalState config fw.modalState newUserModel
 
         -- Check for auto-reset: if item counts changed, reset selection
         newLayout : Layout msg
@@ -6151,9 +6151,8 @@ syncModalState :
     { a | modal : model -> Maybe (Modal msg) }
     -> ModalInteractionState msg
     -> model
-    -> model
     -> ModalInteractionState msg
-syncModalState config previousModalState _ newModel =
+syncModalState config previousModalState newModel =
     case config.modal newModel of
         Nothing ->
             NoModal

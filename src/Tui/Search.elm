@@ -108,7 +108,6 @@ query (State s) =
     s.queryText
 
 
-
 {-| How many lines match the current query?
 -}
 matchCount : List Tui.Screen.Screen -> State -> Int
@@ -152,6 +151,7 @@ statusText content (State s) =
         let
             matches =
                 findMatchLines s.queryText content
+
             count =
                 List.length matches
         in

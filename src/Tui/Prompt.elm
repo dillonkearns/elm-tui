@@ -8,7 +8,7 @@ module Tui.Prompt exposing
 {-| Text prompt with optional masking and suggestions.
 
 A Prompt is a text input dialog for collecting user input. It builds on
-[`Tui.Input`](Tui-Input) and adds masking (for passwords), suggestions
+[`Tui.Input`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui-Input) and adds masking (for passwords), suggestions
 (autocomplete), and a typed `Result` that eliminates boolean checks.
 
 Render with [`Tui.Modal.overlay`](Tui-Modal#overlay):
@@ -160,9 +160,14 @@ type Result
 {-| Handle a key event. Returns the updated state and a `Result`.
 
     case Prompt.handleKeyEvent event promptState of
-        ( _, Prompt.Submitted value ) -> handleSubmit value
-        ( _, Prompt.Cancelled ) -> closePrompt
-        ( newState, Prompt.Continue ) -> keepEditing newState
+        ( _, Prompt.Submitted value ) ->
+            handleSubmit value
+
+        ( _, Prompt.Cancelled ) ->
+            closePrompt
+
+        ( newState, Prompt.Continue ) ->
+            keepEditing newState
 
 -}
 handleKeyEvent : Tui.Sub.KeyEvent -> State -> ( State, Result )

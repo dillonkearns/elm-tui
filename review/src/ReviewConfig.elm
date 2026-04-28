@@ -31,16 +31,24 @@ import Review.Rule exposing (Rule)
 config : List Rule
 config =
     [ NoUnused.Modules.rule
+        |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
     , NoUnused.Exports.rule
+        |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
     , NoUnused.Dependencies.rule
     , NoUnused.CustomTypeConstructorArgs.rule
+        |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
     , NoUnused.Parameters.rule
     , NoDebug.Log.rule
     , NoDebug.TodoOrToString.rule
         |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
     , NoExposingEverything.rule
     , NoMissingTypeAnnotation.rule
+        |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
     , NoModuleOnExposedNames.rule
+        -- Tui.Layout.Effect re-exports the Internal Effect type as a type
+        -- alias of the same name; the rule's auto-fix would shadow it into
+        -- a recursive alias. Reference: src/Tui/Layout/Effect.elm.
+        |> Review.Rule.ignoreErrorsForFiles [ "src/Tui/Layout/Effect.elm" ]
     , Docs.NoMissing.rule
         { document = onlyExposed
         , from = exposedModules

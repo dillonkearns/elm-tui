@@ -33,9 +33,11 @@ import Tui.Screen
 Uses lazygit's formula: `min(4 * terminalWidth / 7, 90)` with a floor
 of 80 characters (or `terminalWidth - 2` if the terminal is narrow).
 
-    Modal.defaultWidth 120  -- 68 (120 * 4/7 = 68)
-    Modal.defaultWidth 80   -- 80 (floor)
-    Modal.defaultWidth 40   -- 38 (narrow terminal)
+    Modal.defaultWidth 120 -- 68 (120 * 4/7 = 68)
+
+    Modal.defaultWidth 80 -- 80 (floor)
+
+    Modal.defaultWidth 40 -- 38 (narrow terminal)
 
 This is a convenience — you can always pass a custom `width` directly
 if the default is too wide or too narrow for your content:

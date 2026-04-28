@@ -62,9 +62,10 @@ fuzzyMatchHelper queryChars candidateChars =
 {-| Score a fuzzy match (higher = better). Returns 0 for non-matches.
 
 Scoring bonuses:
-- Consecutive matched characters: +5 per consecutive char
-- Start of word (after `.`, `/`, `-`, `_`, or start of string): +10
-- Exact case match: +1
+
+  - Consecutive matched characters: +5 per consecutive char
+  - Start of word (after `.`, `/`, `-`, `_`, or start of string): +10
+  - Exact case match: +1
 
 -}
 score : String -> String -> Int

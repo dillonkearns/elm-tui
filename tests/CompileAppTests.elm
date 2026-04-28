@@ -944,7 +944,7 @@ setSelUpdate _ msg model =
 
 
 setSelView : Tui.Context -> SetSelModel -> Layout.Layout SetSelMsg
-setSelView _ model =
+setSelView _ _ =
     Layout.horizontal
         [ Layout.pane "items"
             { title = "Items", width = Layout.fill }

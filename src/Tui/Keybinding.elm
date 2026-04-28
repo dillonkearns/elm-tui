@@ -180,7 +180,9 @@ modifierOrder mod =
 {-| Format a key and modifiers as a human-readable label.
 
     formatKey (Tui.Sub.Character 'j') [] == "j"
+
     formatKey (Tui.Sub.Arrow Tui.Sub.Up) [] == "↑"
+
     formatKey (Tui.Sub.Character 'a') [ Tui.Sub.Ctrl ] == "ctrl+a"
 
 -}
@@ -465,6 +467,7 @@ Use this for mouse interactions, framework behaviors, or other non-keyboard
 entries in the help screen. These are not dispatchable — they're informational.
 
     Keybinding.infoRow "scroll ↑" "Scroll up"
+
     Keybinding.infoRow "click" "Select item"
 
 -}

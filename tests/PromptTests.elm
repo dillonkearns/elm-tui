@@ -3,8 +3,8 @@ module PromptTests exposing (suite)
 import Expect
 import Test exposing (Test, describe, test)
 import Tui
-import Tui.Prompt as Prompt
 import Tui.Attribute as Attr
+import Tui.Prompt as Prompt
 import Tui.Screen
 import Tui.Screen.Advanced as ScreenAdvanced
 import Tui.Sub

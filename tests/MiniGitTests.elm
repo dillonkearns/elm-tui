@@ -1,4 +1,4 @@
-module MiniGitTests exposing (suite, tuiTests)
+module MiniGitTests exposing (suite)
 
 import Expect exposing (Expectation)
 import MiniGit exposing (initialModelWithContext, miniGitLayout, miniGitTest)

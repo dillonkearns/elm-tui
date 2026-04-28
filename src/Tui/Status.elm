@@ -184,6 +184,7 @@ conditionally subscribe to the tick timer.
 
     if Status.hasActivity model.status { waiting = model.pushing } then
         Tui.Sub.everyMillis 100 (\_ -> Tick)
+
     else
         Tui.Sub.none
 

@@ -11,7 +11,7 @@ module Tui.Layout.Effect exposing
 
 {-| Effects for apps built with [`Tui.Layout.compileApp`](Tui-Layout#compileApp).
 
-This is a superset of the core [`Tui.Effect`](Tui-Effect) type. It wraps the
+This is a superset of the core [`Tui.Effect`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui-Effect) type. It wraps the
 runtime-level effects (`perform`, `attempt`, `exit`, …) and adds
 framework-specific operations for scrolling, focus, selection, and toasts —
 operations that only make sense when the `Layout.compileApp` framework is
@@ -31,8 +31,8 @@ managing state on your behalf.
                     ]
                 )
 
-If you are writing a plain TUI with [`Tui.program`](Tui#program) and not using
-`Layout.compileApp`, use [`Tui.Effect`](Tui-Effect) directly — this module's
+If you are writing a plain TUI with [`Tui.program`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#program) and not using
+`Layout.compileApp`, use [`Tui.Effect`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui-Effect) directly — this module's
 framework-specific effects have no meaning outside the Layout framework.
 
 @docs Effect

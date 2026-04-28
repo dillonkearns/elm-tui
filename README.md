@@ -169,40 +169,40 @@ scroll behavior, layout reflow, and off-screen content.
 
 | Module | Description |
 |--------|-------------|
-| [`Tui.Layout`](Tui-Layout) | Split-pane layout engine — the main orchestrator. Manages panes, selection, scroll, focus, tabs, keybindings, modals, and mouse dispatch in one opaque `State`. |
+| [`Tui.Layout`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-Layout) | Split-pane layout engine — the main orchestrator. Manages panes, selection, scroll, focus, tabs, keybindings, modals, and mouse dispatch in one opaque `State`. |
 
 ### Modals & Dialogs
 
 | Module | Description |
 |--------|-------------|
-| [`Tui.Modal`](Tui-Modal) | Centered bordered overlay — the rendering primitive that all modal widgets use. |
-| [`Tui.Picker`](Tui-Picker) | Fuzzy-filtered searchable list popup. Type to narrow, j/k to navigate. |
-| [`Tui.CommandPalette`](Tui-CommandPalette) | Command palette built on Picker — browse and execute keybinding actions. |
-| [`Tui.Menu`](Tui-Menu) | Direct-dispatch menu with sections and disabled items. Unlike Picker, keys fire immediately. |
-| [`Tui.Confirm`](Tui-Confirm) | Yes/No confirmation dialog. |
-| [`Tui.Prompt`](Tui-Prompt) | Text input dialog with optional masking and suggestions. |
+| [`Tui.Modal`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-Modal) | Centered bordered overlay — the rendering primitive that all modal widgets use. |
+| [`Tui.Picker`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-Picker) | Fuzzy-filtered searchable list popup. Type to narrow, j/k to navigate. |
+| [`Tui.CommandPalette`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-CommandPalette) | Command palette built on Picker — browse and execute keybinding actions. |
+| [`Tui.Menu`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-Menu) | Direct-dispatch menu with sections and disabled items. Unlike Picker, keys fire immediately. |
+| [`Tui.Confirm`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-Confirm) | Yes/No confirmation dialog. |
+| [`Tui.Prompt`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-Prompt) | Text input dialog with optional masking and suggestions. |
 
 ### Status & Feedback
 
 | Module | Description |
 |--------|-------------|
-| [`Tui.Status`](Tui-Status) | Unified status bar — toasts, waiting spinners, and error messages in one module. |
-| [`Tui.Toast`](Tui-Toast) | Standalone auto-dismissing toast notifications. Prefer `Tui.Status` for new code. |
-| [`Tui.Spinner`](Tui-Spinner) | Stateless `\|`, `/`, `-`, `\` spinner animation. |
+| [`Tui.Status`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-Status) | Unified status bar — toasts, waiting spinners, and error messages in one module. |
+| [`Tui.Toast`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-Toast) | Standalone auto-dismissing toast notifications. Prefer `Tui.Status` for new code. |
+| [`Tui.Spinner`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-Spinner) | Stateless `\|`, `/`, `-`, `\` spinner animation. |
 
 ### Keybindings & Navigation
 
 | Module | Description |
 |--------|-------------|
-| [`Tui.Keybinding`](Tui-Keybinding) | Declarative keybinding groups — dispatch, help screen generation, and formatting. |
-| [`Tui.OptionsBar`](Tui-OptionsBar) | Bottom-of-screen keybinding hints (like lazygit's footer). |
-| [`Tui.Search`](Tui-Search) | In-pane text search with smart-case matching and `n`/`N` navigation. |
+| [`Tui.Keybinding`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-Keybinding) | Declarative keybinding groups — dispatch, help screen generation, and formatting. |
+| [`Tui.OptionsBar`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-OptionsBar) | Bottom-of-screen keybinding hints (like lazygit's footer). |
+| [`Tui.Search`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-Search) | In-pane text search with smart-case matching and `n`/`N` navigation. |
 
 ### Utilities
 
 | Module | Description |
 |--------|-------------|
-| [`Tui.FuzzyMatch`](Tui-FuzzyMatch) | Fuzzy string matching — used by Picker internally, useful for custom filtering. |
+| [`Tui.FuzzyMatch`](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/Tui-FuzzyMatch) | Fuzzy string matching — used by Picker internally, useful for custom filtering. |
 
 ## Installation
 
@@ -217,4 +217,4 @@ for the core `Tui` primitives (`Tui.Screen`, `Tui.Effect`, `Tui.Sub`, etc.).
 
 - [elm-pages TUI guide](https://elm-pages.com) — getting started with `Tui.program`
 - [`examples/MiniGit.elm`](https://github.com/dillonkearns/elm-tui/blob/master/examples/MiniGit.elm) — full working example
-- [Elm package docs](https://package.elm-lang.org/packages/dillonkearns/elm-tui/latest/) — API reference with examples in every module
+- [Elm package docs](https://package.elm-lang.org/packages/dillonkearns/elm-tui/1.0.0/) — API reference with examples in every module

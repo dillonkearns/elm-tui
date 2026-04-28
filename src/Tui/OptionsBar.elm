@@ -24,7 +24,7 @@ import Tui.Screen
 
 
 {-| Render the options bar for the given terminal width and keybinding groups.
-Shows `description: key` pairs separated by ` | `. Truncates with `…` when
+Shows `description: key` pairs separated by `|`. Truncates with `…` when
 the bar would exceed the available width.
 
 Uses the full binding label for each keybinding, including alternates and

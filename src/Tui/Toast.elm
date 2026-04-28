@@ -110,6 +110,7 @@ to the tick timer.
 
     if Toast.hasToasts model.toasts then
         Tui.Sub.everyMillis 100 (\_ -> ToastTick)
+
     else
         Tui.Sub.none
 

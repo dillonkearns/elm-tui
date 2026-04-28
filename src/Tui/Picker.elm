@@ -22,12 +22,23 @@ prefer [`Layout.pickerModal`](Tui-Layout#pickerModal) which handles key routing 
 
     -- In update (handle key events while picker is open):
     case event.key of
-        Tui.Sub.Escape -> closePicker
-        Tui.Sub.Enter -> selectItem (Picker.selected pickerState)
-        Tui.Sub.Arrow Tui.Sub.Down -> { model | picker = Picker.navigateDown model.picker }
-        Tui.Sub.Arrow Tui.Sub.Up -> { model | picker = Picker.navigateUp model.picker }
-        Tui.Sub.Backspace -> { model | picker = Picker.backspace model.picker }
-        Tui.Sub.Character c -> { model | picker = Picker.typeChar c model.picker }
+        Tui.Sub.Escape ->
+            closePicker
+
+        Tui.Sub.Enter ->
+            selectItem (Picker.selected pickerState)
+
+        Tui.Sub.Arrow Tui.Sub.Down ->
+            { model | picker = Picker.navigateDown model.picker }
+
+        Tui.Sub.Arrow Tui.Sub.Up ->
+            { model | picker = Picker.navigateUp model.picker }
+
+        Tui.Sub.Backspace ->
+            { model | picker = Picker.backspace model.picker }
+
+        Tui.Sub.Character c ->
+            { model | picker = Picker.typeChar c model.picker }
 
     -- Render with Modal.overlay:
     Modal.overlay
@@ -36,7 +47,8 @@ prefer [`Layout.pickerModal`](Tui-Layout#pickerModal) which handles key routing 
         , footer = String.fromInt (Picker.matchCount pickerState) ++ " matches"
         , width = 50
         }
-        dims bgRows
+        dims
+        bgRows
 
 @docs State, Config, open
 @docs typeChar, backspace, navigateDown, navigateUp

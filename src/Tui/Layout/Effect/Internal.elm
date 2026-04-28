@@ -10,7 +10,7 @@ import Tui.Effect
 
 
 {-| Layered effect type used by `Tui.Layout.compileApp`. Wraps the core
-[`Tui.Effect`](Tui-Effect) type with framework-specific operations for
+[`Tui.Effect`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui-Effect) type with framework-specific operations for
 scrolling, focus, selection, and toast notifications.
 -}
 type Effect msg
