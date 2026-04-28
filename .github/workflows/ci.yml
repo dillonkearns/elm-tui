@@ -11,6 +11,10 @@ on:
 jobs:
   main:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # EndBug/add-and-commit pushes docs.json; elm-publish-action creates tags
+      checks: write # sparksp/elm-review-action posts review annotations
+      pull-requests: write # sparksp/elm-review-action posts inline comments on PRs
 
     steps:
       - uses: actions/checkout@v4
