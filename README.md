@@ -1,6 +1,6 @@
-# elm-tui-widgets
+# elm-tui
 
-Lazygit-inspired TUI widgets for [elm-pages](https://elm-pages.com) terminal applications.
+Lazygit-inspired TUI layout framework for [elm-pages](https://elm-pages.com) terminal applications.
 
 Split-pane layouts, selectable lists, modals, fuzzy pickers, keybinding dispatch,
 search, toasts — the building blocks for rich terminal UIs, all declarative Elm.
@@ -114,7 +114,7 @@ run =
 ```
 
 See the full working example in
-[`examples/end-to-end/script/src/MiniGit.elm`](https://github.com/dillonkearns/elm-pages/blob/master/examples/end-to-end/script/src/MiniGit.elm).
+[`examples/MiniGit.elm`](https://github.com/dillonkearns/elm-tui/blob/master/examples/MiniGit.elm).
 
 ## Testing
 
@@ -207,7 +207,7 @@ scroll behavior, layout reflow, and off-screen content.
 ## Installation
 
 ```bash
-elm install dillonkearns/elm-tui-widgets
+elm install dillonkearns/elm-tui
 ```
 
 This package depends on [`dillonkearns/elm-pages`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/)
@@ -216,5 +216,5 @@ for the core `Tui` primitives (`Tui.Screen`, `Tui.Effect`, `Tui.Sub`, etc.).
 ## Learning Resources
 
 - [elm-pages TUI guide](https://elm-pages.com) — getting started with `Tui.program`
-- [`examples/end-to-end/script/src/MiniGit.elm`](https://github.com/dillonkearns/elm-pages/blob/master/examples/end-to-end/script/src/MiniGit.elm) — full working example
-- [Elm package docs](https://package.elm-lang.org/packages/dillonkearns/elm-tui-widgets/latest/) — API reference with examples in every module
+- [`examples/MiniGit.elm`](https://github.com/dillonkearns/elm-tui/blob/master/examples/MiniGit.elm) — full working example
+- [Elm package docs](https://package.elm-lang.org/packages/dillonkearns/elm-tui/latest/) — API reference with examples in every module

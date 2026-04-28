@@ -1,8 +1,8 @@
 module Tui.Layout.Effect.Internal exposing (Effect(..))
 
 {-| Internal effect type for `Tui.Layout.compileApp` apps. Not exposed from
-tui-widgets. Kept separate from [`Tui.Layout.Effect`](Tui-Layout-Effect) so
-other tui-widgets modules (`Tui.Layout`) can pattern-match on the constructors
+elm-tui. Kept separate from [`Tui.Layout.Effect`](Tui-Layout-Effect) so
+other elm-tui modules (`Tui.Layout`) can pattern-match on the constructors
 while the public API surface stays opaque.
 -}
 

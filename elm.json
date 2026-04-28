@@ -1,7 +1,7 @@
 {
     "type": "package",
-    "name": "dillonkearns/elm-tui-widgets",
-    "summary": "TUI widgets for elm-pages terminal apps.",
+    "name": "dillonkearns/elm-tui",
+    "summary": "Lazygit-inspired TUI layout framework for Elm.",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": [
