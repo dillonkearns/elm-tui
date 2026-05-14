@@ -2039,7 +2039,22 @@ handleKeyEvent event layout (State s) =
                         )
 
                     else
-                        handleNormalKeyEvent event layout (State s)
+                        case handleNormalKeyEvent event layout (State s) of
+                            ( newState, msg, True ) ->
+                                ( newState, msg, True )
+
+                            ( newState, _, False ) ->
+                                -- Fall through to built-in navigation: j/k/arrows
+                                -- navigate selectable lists (or scroll content panes
+                                -- by 1 line), Tab cycles pane focus, PageUp/Down /
+                                -- '>'/'<' page through. Always tried last, so user
+                                -- bindings (when present) take precedence.
+                                case tryBuiltInNav event layout newState of
+                                    Just ( navState, navMsg ) ->
+                                        ( navState, navMsg, True )
+
+                                    Nothing ->
+                                        ( newState, Nothing, False )
 
 
 handleFilterKeyEvent : Tui.Sub.KeyEvent -> Layout msg -> FilterState -> State -> ( State, Maybe msg, Bool )
@@ -5798,67 +5813,45 @@ handleKeyPressedNoModal config keyEvent (FrameworkModel fw) =
         layout : Layout msg
         layout =
             config.view fw.context fw.userModel
+
+        -- handleKeyEvent now handles built-in navigation (j/k/arrows/Tab/PageUp/Down)
+        -- in addition to filter/search/tree/number keys.
+        ( newLayoutState, maybeLayoutMsg, consumed ) =
+            handleKeyEvent keyEvent layout fw.layoutState
+
+        scrollMsgs : List msg
+        scrollMsgs =
+            scrollCallbackMsgs fw.layoutState newLayoutState layout
     in
-    -- 1. Try built-in nav keys
-    case tryBuiltInNav keyEvent layout fw of
-        Just ( newFw, maybeMsg ) ->
-            let
-                scrollMsgs : List msg
-                scrollMsgs =
-                    scrollCallbackMsgs fw.layoutState newFw.layoutState layout
-
-                ( afterNavModel, afterNavEffect ) =
-                    case maybeMsg of
-                        Just msg ->
-                            applyUserMsg config msg (FrameworkModel newFw)
-
-                        Nothing ->
-                            ( FrameworkModel newFw, Effect.none )
-
-                ( finalModel, scrollEffects ) =
-                    applyScrollMsgs config scrollMsgs afterNavModel
-            in
-            ( finalModel, Effect.batch (afterNavEffect :: scrollEffects) )
-
-        Nothing ->
-            -- 2. Try Layout.handleKeyEvent (filter/search/tree/numbers)
-            let
-                ( newLayoutState, maybeLayoutMsg, consumed ) =
-                    handleKeyEvent keyEvent layout fw.layoutState
-
-                scrollMsgs2 : List msg
-                scrollMsgs2 =
-                    scrollCallbackMsgs fw.layoutState newLayoutState layout
-            in
-            if consumed then
-                let
-                    ( afterKeyModel, afterKeyEffect ) =
-                        case maybeLayoutMsg of
-                            Just msg ->
-                                applyUserMsg config msg (FrameworkModel { fw | layoutState = newLayoutState })
-
-                            Nothing ->
-                                ( FrameworkModel { fw | layoutState = newLayoutState }, Effect.none )
-
-                    ( finalModel2, scrollEffects2 ) =
-                        applyScrollMsgs config scrollMsgs2 afterKeyModel
-                in
-                ( finalModel2, Effect.batch (afterKeyEffect :: scrollEffects2) )
-
-            else
-                -- 3. Try user bindings via Keybinding.dispatch
-                case Tui.Keybinding.dispatch (config.bindings { focusedPane = focusedPane fw.layoutState } fw.userModel) keyEvent of
-                    Just action ->
-                        applyUserMsg config action (FrameworkModel { fw | layoutState = newLayoutState })
+    if consumed then
+        let
+            ( afterKeyModel, afterKeyEffect ) =
+                case maybeLayoutMsg of
+                    Just msg ->
+                        applyUserMsg config msg (FrameworkModel { fw | layoutState = newLayoutState })
 
                     Nothing ->
-                        -- 4. Try onRawEvent escape hatch
-                        case config.onRawEvent of
-                            Just toMsg ->
-                                applyUserMsg config (toMsg (UnhandledKey keyEvent)) (FrameworkModel { fw | layoutState = newLayoutState })
+                        ( FrameworkModel { fw | layoutState = newLayoutState }, Effect.none )
 
-                            Nothing ->
-                                ( FrameworkModel { fw | layoutState = newLayoutState }, Effect.none )
+            ( finalModel, scrollEffects ) =
+                applyScrollMsgs config scrollMsgs afterKeyModel
+        in
+        ( finalModel, Effect.batch (afterKeyEffect :: scrollEffects) )
+
+    else
+        -- Try user bindings via Keybinding.dispatch
+        case Tui.Keybinding.dispatch (config.bindings { focusedPane = focusedPane fw.layoutState } fw.userModel) keyEvent of
+            Just action ->
+                applyUserMsg config action (FrameworkModel { fw | layoutState = newLayoutState })
+
+            Nothing ->
+                -- onRawEvent escape hatch
+                case config.onRawEvent of
+                    Just toMsg ->
+                        applyUserMsg config (toMsg (UnhandledKey keyEvent)) (FrameworkModel { fw | layoutState = newLayoutState })
+
+                    Nothing ->
+                        ( FrameworkModel { fw | layoutState = newLayoutState }, Effect.none )
 
 
 {-| Try navigate (for selectable panes) or fall back to scroll (for content panes).
@@ -5868,26 +5861,26 @@ navigateOrScroll :
     -> (String -> Int -> State -> State)
     -> Int
     -> Layout msg
-    -> { a | layoutState : State, context : Tui.Context }
-    -> Maybe ( { a | layoutState : State, context : Tui.Context }, Maybe msg )
-navigateOrScroll navigate scroll delta layout fw =
-    case focusedPane fw.layoutState of
+    -> State
+    -> Maybe ( State, Maybe msg )
+navigateOrScroll navigate scroll delta layout state =
+    case focusedPane state of
         Just paneId ->
             let
                 ( newState, maybeMsg ) =
-                    navigate paneId layout fw.layoutState
+                    navigate paneId layout state
             in
             case maybeMsg of
                 Just _ ->
-                    Just ( { fw | layoutState = newState }, maybeMsg )
+                    Just ( newState, maybeMsg )
 
                 Nothing ->
                     -- Content pane: fall back to scrolling
                     if isContentPaneId paneId layout then
-                        Just ( { fw | layoutState = scroll paneId delta fw.layoutState }, Nothing )
+                        Just ( scroll paneId delta state, Nothing )
 
                     else
-                        Just ( { fw | layoutState = newState }, Nothing )
+                        Just ( newState, Nothing )
 
         Nothing ->
             Nothing
@@ -5896,25 +5889,26 @@ navigateOrScroll navigate scroll delta layout fw =
 tryBuiltInNav :
     Tui.Sub.KeyEvent
     -> Layout msg
-    ->
-        { a
-            | layoutState : State
-            , context : Tui.Context
-        }
-    -> Maybe ( { a | layoutState : State, context : Tui.Context }, Maybe msg )
-tryBuiltInNav keyEvent layout fw =
+    -> State
+    -> Maybe ( State, Maybe msg )
+tryBuiltInNav keyEvent layout state =
+    let
+        pageDelta : Int
+        pageDelta =
+            max 1 ((contextOf state).height - 2)
+    in
     case keyEvent.key of
         Tui.Sub.Character 'j' ->
-            navigateOrScroll navigateDown scrollDown 1 layout fw
+            navigateOrScroll navigateDown scrollDown 1 layout state
 
         Tui.Sub.Arrow Tui.Sub.Down ->
-            navigateOrScroll navigateDown scrollDown 1 layout fw
+            navigateOrScroll navigateDown scrollDown 1 layout state
 
         Tui.Sub.Character 'k' ->
-            navigateOrScroll navigateUp scrollUp 1 layout fw
+            navigateOrScroll navigateUp scrollUp 1 layout state
 
         Tui.Sub.Arrow Tui.Sub.Up ->
-            navigateOrScroll navigateUp scrollUp 1 layout fw
+            navigateOrScroll navigateUp scrollUp 1 layout state
 
         Tui.Sub.Tab ->
             let
@@ -5924,7 +5918,7 @@ tryBuiltInNav keyEvent layout fw =
 
                 currentFocused : Maybe String
                 currentFocused =
-                    focusedPane fw.layoutState
+                    focusedPane state
 
                 nextPaneId : Maybe String
                 nextPaneId =
@@ -5943,57 +5937,25 @@ tryBuiltInNav keyEvent layout fw =
             in
             case nextPaneId of
                 Just newPaneId ->
-                    Just ( { fw | layoutState = focusPane newPaneId fw.layoutState }, Nothing )
+                    Just ( focusPane newPaneId state, Nothing )
 
                 Nothing ->
                     Nothing
 
         Tui.Sub.PageDown ->
-            navigateOrScroll pageDown scrollDown (fw.context.height - 2) layout fw
+            navigateOrScroll pageDown scrollDown pageDelta layout state
 
         Tui.Sub.PageUp ->
-            navigateOrScroll pageUp scrollUp (fw.context.height - 2) layout fw
+            navigateOrScroll pageUp scrollUp pageDelta layout state
 
         Tui.Sub.Character '>' ->
-            navigateOrScroll pageDown scrollDown (fw.context.height - 2) layout fw
+            navigateOrScroll pageDown scrollDown pageDelta layout state
 
         Tui.Sub.Character '<' ->
-            navigateOrScroll pageUp scrollUp (fw.context.height - 2) layout fw
+            navigateOrScroll pageUp scrollUp pageDelta layout state
 
         _ ->
-            -- Check for number keys 1-9 (jump to pane)
-            case keyEvent.key of
-                Tui.Sub.Character c ->
-                    let
-                        digit : Maybe Int
-                        digit =
-                            String.fromChar c
-                                |> String.toInt
-                    in
-                    case digit of
-                        Just n ->
-                            if n >= 1 && n <= 9 then
-                                let
-                                    paneIds : List String
-                                    paneIds =
-                                        extractPaneIds layout
-                                in
-                                paneIds
-                                    |> List.drop (n - 1)
-                                    |> List.head
-                                    |> Maybe.map
-                                        (\targetPaneId ->
-                                            ( { fw | layoutState = focusPane targetPaneId fw.layoutState }, Nothing )
-                                        )
-
-                            else
-                                Nothing
-
-                        Nothing ->
-                            Nothing
-
-                _ ->
-                    Nothing
+            Nothing
 
 
 {-| Built-in help section for display only (never dispatched against).

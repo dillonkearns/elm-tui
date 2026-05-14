@@ -55,10 +55,7 @@ type HelpMode
 
 
 type Action
-    = DoNavigate Int
-    | DoScrollDiff Int
-    | DoQuit
-    | DoSwitchPane
+    = DoQuit
     | DoOpenCommit
     | DoOpenHelp
 
@@ -87,40 +84,14 @@ testGlobalBindings : Keybinding.Group Action
 testGlobalBindings =
     Keybinding.group "Global"
         [ Keybinding.binding (Tui.Sub.Character 'q') "Quit" DoQuit
-        , Keybinding.binding Tui.Sub.Tab "Switch pane" DoSwitchPane
         , Keybinding.binding (Tui.Sub.Character 'c') "Commit" DoOpenCommit
         , Keybinding.binding (Tui.Sub.Character '?') "Help" DoOpenHelp
         ]
 
 
-testCommitBindings : Keybinding.Group Action
-testCommitBindings =
-    Keybinding.group "Commits"
-        [ Keybinding.binding (Tui.Sub.Character 'j') "Next commit" (DoNavigate 1)
-            |> Keybinding.withAlternate (Tui.Sub.Arrow Tui.Sub.Down)
-        , Keybinding.binding (Tui.Sub.Character 'k') "Previous commit" (DoNavigate -1)
-            |> Keybinding.withAlternate (Tui.Sub.Arrow Tui.Sub.Up)
-        ]
-
-
-testDiffBindings : Keybinding.Group Action
-testDiffBindings =
-    Keybinding.group "Diff"
-        [ Keybinding.binding (Tui.Sub.Character 'j') "Scroll down" (DoScrollDiff 3)
-            |> Keybinding.withAlternate (Tui.Sub.Arrow Tui.Sub.Down)
-        , Keybinding.binding (Tui.Sub.Character 'k') "Scroll up" (DoScrollDiff -3)
-            |> Keybinding.withAlternate (Tui.Sub.Arrow Tui.Sub.Up)
-        ]
-
-
 testActiveBindings : Model -> List (Keybinding.Group Action)
-testActiveBindings model =
-    case Layout.focusedPane model.layout of
-        Just "diff" ->
-            [ testDiffBindings, testGlobalBindings ]
-
-        _ ->
-            [ testCommitBindings, testGlobalBindings ]
+testActiveBindings _ =
+    [ testGlobalBindings ]
 
 
 sampleCommits : List Commit
@@ -349,51 +320,8 @@ miniGitUpdate msg model =
 handleAction : Action -> Model -> ( Model, Effect Msg )
 handleAction action model =
     case action of
-        DoNavigate direction ->
-            let
-                ( newLayout, maybeMsg ) =
-                    (if direction > 0 then
-                        Layout.navigateDown "commits" (miniGitLayout model)
-
-                     else
-                        Layout.navigateUp "commits" (miniGitLayout model)
-                    )
-                        model.layout
-            in
-            -- navigateDown/Up fires SelectCommit when selection changes
-            case maybeMsg of
-                Just userMsg ->
-                    miniGitUpdate userMsg { model | layout = newLayout }
-
-                Nothing ->
-                    ( { model | layout = newLayout }, Effect.none )
-
         DoQuit ->
             ( model, Effect.exit )
-
-        DoSwitchPane ->
-            let
-                nextFocus : String
-                nextFocus =
-                    if Layout.focusedPane model.layout == Just "commits" then
-                        "diff"
-
-                    else
-                        "commits"
-            in
-            ( { model | layout = Layout.focusPane nextFocus model.layout }, Effect.none )
-
-        DoScrollDiff delta ->
-            let
-                newLayout : Layout.State
-                newLayout =
-                    if delta > 0 then
-                        Layout.scrollDown "diff" delta model.layout
-
-                    else
-                        Layout.scrollUp "diff" (abs delta) model.layout
-            in
-            ( { model | layout = newLayout }, Effect.none )
 
         DoOpenCommit ->
             ( { model | modal = Just (CommitModal { input = Input.init "" }) }, Effect.none )

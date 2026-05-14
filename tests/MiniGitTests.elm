@@ -241,7 +241,7 @@ suite =
                     TuiTest.expect miniGitTest
                         [ TuiTest.pressKey '?'
                         , TuiTest.ensureViewHas "Quit"
-                        , TuiTest.ensureViewHas "Next commit"
+                        , TuiTest.ensureViewHas "Commit"
                         , TuiTest.expectRunning
                         ]
             , test "escape closes help" <|
@@ -263,7 +263,7 @@ suite =
                         , TuiTest.pressKey 'i'
                         , TuiTest.pressKey 't'
                         , TuiTest.ensureViewHas "Quit"
-                        , TuiTest.ensureViewDoesNotHave "Next commit"
+                        , TuiTest.ensureViewDoesNotHave "Help"
                         , TuiTest.expectRunning
                         ]
             , test "Esc in search mode returns to browse, not close" <|
@@ -303,10 +303,8 @@ suite =
                         [ TuiTest.pressKey '?'
                         , TuiTest.pressKey '/'
                         , TuiTest.pressKey '@'
-                        , TuiTest.pressKey 't'
-                        , TuiTest.pressKey 'a'
-                        , TuiTest.pressKey 'b'
-                        , TuiTest.ensureViewHas "Switch pane"
+                        , TuiTest.pressKey 'c'
+                        , TuiTest.ensureViewHas "Commit"
                         , TuiTest.ensureViewDoesNotHave "Quit"
                         , TuiTest.expectRunning
                         ]
