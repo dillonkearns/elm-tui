@@ -357,20 +357,7 @@ helpView _ model =
             { title = "Items", width = Layout.fill }
             (Layout.selectableList
                 { onSelect = SelectItem
-                , view =
-                    \{ selection } item ->
-                        case selection of
-                            Layout.Selected { focused } ->
-                                Tui.Screen.text ("▸ " ++ item)
-                                    |> (if focused then
-                                            Tui.Screen.bg Ansi.Color.blue
-
-                                        else
-                                            Tui.Screen.bold
-                                       )
-
-                            Layout.NotSelected ->
-                                Tui.Screen.text ("  " ++ item)
+                , view = Tui.Screen.text
                 }
                 model.items
             )
@@ -760,24 +747,12 @@ linkSelView _ model =
             (Layout.selectableList
                 { onSelect = LinkSelSelected
                 , view =
-                    \{ selection } item ->
-                        let
-                            prefix =
-                                case selection of
-                                    Layout.Selected _ ->
-                                        "▸ "
-
-                                    Layout.NotSelected ->
-                                        "  "
-                        in
+                    \item ->
                         if item == "linked-item" then
-                            Tui.Screen.concat
-                                [ Tui.Screen.text prefix
-                                , Tui.Screen.text item |> Tui.Screen.link { url = "https://item.example" }
-                                ]
+                            Tui.Screen.text item |> Tui.Screen.link { url = "https://item.example" }
 
                         else
-                            Tui.Screen.text (prefix ++ item)
+                            Tui.Screen.text item
                 }
                 model.items
             )
@@ -950,14 +925,7 @@ setSelView _ _ =
             { title = "Items", width = Layout.fill }
             (Layout.selectableList
                 { onSelect = SetSelSelect
-                , view =
-                    \{ selection } item ->
-                        case selection of
-                            Layout.Selected _ ->
-                                Tui.Screen.text ("▸ " ++ item)
-
-                            Layout.NotSelected ->
-                                Tui.Screen.text ("  " ++ item)
+                , view = Tui.Screen.text
                 }
                 setSelItems
             )

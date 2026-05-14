@@ -470,6 +470,7 @@ suite =
                         |> String.contains "layout"
                         |> Expect.equal True
             ]
+        , TuiTest.toTest tuiTests
         ]
 
 
@@ -505,7 +506,7 @@ expectFailureContaining needle expectation =
 
 tuiTests : TuiTest.Test
 tuiTests =
-    TuiTest.describe "MiniGit"
+    TuiTest.describe "stepper flow"
         [ TuiTest.test "keyboard and click flow"
             miniGitTest
             [ TuiTest.withModelToString Debug.toString

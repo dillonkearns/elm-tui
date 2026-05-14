@@ -200,14 +200,7 @@ appView _ _ =
             { title = "Left", width = Layout.fill }
             (Layout.selectableList
                 { onSelect = SelectItem
-                , view =
-                    \{ selection } item ->
-                        case selection of
-                            Layout.Selected _ ->
-                                Tui.Screen.text ("▸ " ++ item)
-
-                            Layout.NotSelected ->
-                                Tui.Screen.text ("  " ++ item)
+                , view = Tui.Screen.text
                 }
                 items
             )

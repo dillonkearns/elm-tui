@@ -1,6 +1,8 @@
 module Tui.Layout exposing
     ( Layout, Pane, horizontal, vertical, pane, paneGroup, TabConfig
-    , PaneContent, content, selectableList, SelectionState(..), indexSelectableList, withUnfocusedStyle, withFilterable, withSearchable, withTreeView
+    , PaneContent, content, selectableList, selectableListAdvanced, withFilterable, withSearchable, withTreeView
+    , SelectionIndicator, indicatorArrow, indicatorChar, indicatorNone, withSelectionIndicator
+    , SelectionStyle, selectionDefault, selectionSubtle, withSelectionStyle
     , Modal, promptModal, confirmModal, pickerModal, menuModal, helpModal
     , Group, Binding, group, binding, charBinding
     , Width, fill, fillPortion, fixed
@@ -41,21 +43,8 @@ indices, and terminal dimensions in an opaque `State`. The user stores one
             [ Layout.pane "commits"
                 { title = "Commits", width = Layout.fill }
                 (Layout.selectableList
-                    { onSelect = \c -> SelectCommit c
-                    , view =
-                        \{ selection } c ->
-                            case selection of
-                                Layout.Selected { focused } ->
-                                    TuiScreen.text ("▸ " ++ c.sha)
-                                        |> (if focused then
-                                                TuiScreen.bold
-
-                                            else
-                                                identity
-                                           )
-
-                                Layout.NotSelected ->
-                                    TuiScreen.text ("  " ++ c.sha)
+                    { onSelect = SelectCommit
+                    , view = \c -> TuiScreen.text c.sha
                     }
                     model.commits
                 )
@@ -73,7 +62,17 @@ modals, and status together automatically, see [`compileApp`](#compileApp).
 
 ## Pane Content
 
-@docs PaneContent, content, selectableList, SelectionState, indexSelectableList, withUnfocusedStyle, withFilterable, withSearchable, withTreeView
+@docs PaneContent, content, selectableList, selectableListAdvanced, withFilterable, withSearchable, withTreeView
+
+
+### Selection Chrome
+
+The library applies a default visual treatment (leading indicator, bold,
+focused-pane background) to the selected row. Customize via:
+
+@docs SelectionIndicator, indicatorArrow, indicatorChar, indicatorNone, withSelectionIndicator
+
+@docs SelectionStyle, selectionDefault, selectionSubtle, withSelectionStyle
 
 
 ## Modals
@@ -226,19 +225,35 @@ type PaneContent msg
     = StaticContent { lines : Array.Array Screen, lineCount : Int, searchable : Bool }
     | SelectableContent
         { itemCount : Int
-        , renderItem :
+        , renderContent :
             Int
-            -> Screen -- renders default view for item at index
-        , renderSelected :
-            Int
-            -> Screen -- renders selected view for item at index
-        , renderSelectedUnfocused :
-            Int
-            -> Screen -- renders selected view when pane is unfocused
+            -> { selected : Bool, focused : Bool }
+            -> Screen
         , onSelect : Int -> msg
         , filterText : Maybe (Int -> String)
         , treeConfig : Maybe { toPath : Int -> List String }
+        , indicator : SelectionIndicator
+        , selectionStyle : SelectionStyle
         }
+
+
+{-| Indicator drawn in the leading gutter of a selectable list. The default is
+[`indicatorArrow`](#indicatorArrow). To customize, use
+[`withSelectionIndicator`](#withSelectionIndicator).
+-}
+type SelectionIndicator
+    = IndicatorArrow
+    | IndicatorChar Char
+    | IndicatorNone
+
+
+{-| Visual treatment applied to the selected row. The default is
+[`selectionDefault`](#selectionDefault). To customize, use
+[`withSelectionStyle`](#withSelectionStyle).
+-}
+type SelectionStyle
+    = SelectionDefault
+    | SelectionSubtle
 
 
 {-| Width specification using integer weights (like elm-ui).
@@ -449,160 +464,91 @@ content lines =
     StaticContent { lines = Array.fromList lines, lineCount = List.length lines, searchable = False }
 
 
-{-| Index-based selectable list. Prefer [`selectableList`](#selectableList) for
-new code — the item-based `onSelect` eliminates index-mapping bugs.
+{-| A selectable list with library-managed selection chrome. Provide a `view`
+function that describes the _content_ of a row; the library draws the leading
+indicator gutter and highlights the selected row.
 
-    Layout.indexSelectableList
-        { onSelect = SelectCommitIndex
-        , selected = \commit -> TuiScreen.text commit.sha |> TuiScreen.bg Ansi.Color.blue
-        , default = \commit -> TuiScreen.text commit.sha
+    Layout.selectableList
+        { onSelect = SelectCommit
+        , view =
+            \commit ->
+                Tui.Screen.concat
+                    [ Tui.Screen.text commit.sha |> Tui.Screen.dim
+                    , Tui.Screen.text " "
+                    , Tui.Screen.text commit.message
+                    ]
         }
         model.commits
 
--}
-indexSelectableList :
-    { onSelect : Int -> msg
-    , selected : item -> Screen
-    , default : item -> Screen
-    }
-    -> List item
-    -> PaneContent msg
-indexSelectableList config items =
-    let
-        itemArray : Array.Array item
-        itemArray =
-            Array.fromList items
-    in
-    let
-        renderSel : Int -> Screen
-        renderSel =
-            \i ->
-                Array.get i itemArray
-                    |> Maybe.map config.selected
-                    |> Maybe.withDefault TuiScreen.empty
-    in
-    SelectableContent
-        { itemCount = Array.length itemArray
-        , renderItem =
-            \i ->
-                Array.get i itemArray
-                    |> Maybe.map config.default
-                    |> Maybe.withDefault TuiScreen.empty
-        , renderSelected = renderSel
-        , renderSelectedUnfocused = renderSel
-        , onSelect = config.onSelect
-        , filterText = Nothing
-        , treeConfig = Nothing
-        }
+The selected row gets a leading `▸` indicator, bold text, and a blue background
+when the pane is focused (bold only when unfocused). To customize this chrome,
+see [`withSelectionIndicator`](#withSelectionIndicator) and
+[`withSelectionStyle`](#withSelectionStyle).
 
-
-{-| Set a different render style for the selected item when the pane is
-unfocused. In lazygit, the focused pane shows the selection with a blue
-background, while unfocused panes show it dimmed (bold only).
-
-Without this, unfocused panes use the same `selected` style as focused ones.
-
-    Layout.selectableList
-        { onSelect = SelectItem
-        , selected = \item -> TuiScreen.text ("▸ " ++ item) |> TuiScreen.bg Ansi.Color.blue
-        , default = \item -> TuiScreen.text ("  " ++ item)
-        }
-        items
-        |> Layout.withUnfocusedStyle
-            (\item -> TuiScreen.text ("▸ " ++ item) |> TuiScreen.bold)
-            items
-
--}
-withUnfocusedStyle : (item -> Screen) -> List item -> PaneContent msg -> PaneContent msg
-withUnfocusedStyle renderUnfocused items paneContent =
-    case paneContent of
-        SelectableContent config ->
-            let
-                itemArray : Array.Array item
-                itemArray =
-                    Array.fromList items
-            in
-            SelectableContent
-                { config
-                    | renderSelectedUnfocused =
-                        \i ->
-                            Array.get i itemArray
-                                |> Maybe.map renderUnfocused
-                                |> Maybe.withDefault TuiScreen.empty
-                }
-
-        StaticContent _ ->
-            paneContent
-
-
-{-| The selection state of an item in a selectable list.
-
-  - `Selected { focused = True }` — this item is selected AND the pane is focused
-  - `Selected { focused = False }` — this item is selected but the pane is unfocused
-  - `NotSelected` — this item is not selected
-
-Use `Selected _` to match any selected item regardless of focus.
-
-    Layout.selectableList
-        { onSelect = \commit -> SelectCommit commit
-        , view =
-            \{ selection } commit ->
-                case selection of
-                    Layout.Selected { focused } ->
-                        TuiScreen.text commit.sha
-                            |> (if focused then
-                                    TuiScreen.bg Ansi.Color.blue
-
-                                else
-                                    TuiScreen.bold
-                               )
-
-                    Layout.NotSelected ->
-                        TuiScreen.text commit.sha
-        }
-        model.commits
-
--}
-type SelectionState
-    = Selected { focused : Bool }
-    | NotSelected
-
-
-{-| A selectable list with item-based `onSelect` and a unified view function
-that receives `SelectionState`.
-
-    Layout.selectableList
-        { onSelect = \item -> SelectItem item
-        , view =
-            \{ selection } item ->
-                case selection of
-                    Layout.Selected { focused } ->
-                        TuiScreen.text item
-                            |> (if focused then
-                                    TuiScreen.bg Ansi.Color.blue
-
-                                else
-                                    TuiScreen.bold
-                               )
-
-                    Layout.NotSelected ->
-                        TuiScreen.text item
-        }
-        items
-
-For an index-based variant, see [`indexSelectableList`](#indexSelectableList).
+For cases where the row content itself needs to vary based on selection state
+(e.g. an expandable tree row, a badge that disappears when selected), see
+[`selectableListAdvanced`](#selectableListAdvanced).
 
 -}
 selectableList :
     { onSelect : item -> msg
-    , view : { selection : SelectionState } -> item -> Screen
+    , view : item -> Screen
     }
     -> List item
     -> PaneContent msg
 selectableList config items =
+    selectableListAdvanced
+        { onSelect = config.onSelect
+        , view = \_ item -> config.view item
+        }
+        items
+
+
+{-| Like [`selectableList`](#selectableList), but the `view` function receives
+the row's selection state so content can vary by selection.
+
+  - `selected` — `True` if this row is the cursor row in this pane.
+  - `focused` — `True` if the pane is the focused pane.
+
+The library still applies its default chrome (indicator + bold + bg) on top of
+your view's output. To suppress that and take full control of the row's visual
+treatment, combine with [`withSelectionIndicator`](#withSelectionIndicator)
+`indicatorNone` and a `SelectionStyle` that doesn't add bg/bold (or roll your
+own row visuals inside `view`).
+
+    Layout.selectableListAdvanced
+        { onSelect = SelectCommit
+        , view =
+            \{ selected, focused } commit ->
+                let
+                    shaStyle =
+                        if selected && focused then
+                            Tui.Screen.fg Ansi.Color.yellow
+
+                        else if selected then
+                            identity
+
+                        else
+                            Tui.Screen.dim
+                in
+                Tui.Screen.concat
+                    [ Tui.Screen.text commit.sha |> shaStyle
+                    , Tui.Screen.text " "
+                    , Tui.Screen.text commit.message
+                    ]
+        }
+        model.commits
+
+-}
+selectableListAdvanced :
+    { onSelect : item -> msg
+    , view : { selected : Bool, focused : Bool } -> item -> Screen
+    }
+    -> List item
+    -> PaneContent msg
+selectableListAdvanced config items =
     case items of
         [] ->
-            -- Empty list: no selection behavior, no onSelect to fire
             StaticContent { lines = Array.empty, lineCount = 0, searchable = False }
 
         first :: _ ->
@@ -610,18 +556,14 @@ selectableList config items =
                 itemArray : Array.Array item
                 itemArray =
                     Array.fromList items
-
-                renderWith : SelectionState -> Int -> Screen
-                renderWith selState i =
-                    Array.get i itemArray
-                        |> Maybe.map (config.view { selection = selState })
-                        |> Maybe.withDefault TuiScreen.empty
             in
             SelectableContent
                 { itemCount = Array.length itemArray
-                , renderItem = renderWith NotSelected
-                , renderSelected = renderWith (Selected { focused = True })
-                , renderSelectedUnfocused = renderWith (Selected { focused = False })
+                , renderContent =
+                    \i state ->
+                        Array.get i itemArray
+                            |> Maybe.map (config.view state)
+                            |> Maybe.withDefault TuiScreen.empty
                 , onSelect =
                     \i ->
                         Array.get i itemArray
@@ -629,7 +571,137 @@ selectableList config items =
                             |> config.onSelect
                 , filterText = Nothing
                 , treeConfig = Nothing
+                , indicator = IndicatorArrow
+                , selectionStyle = SelectionDefault
                 }
+
+
+{-| The default selection indicator — a `▸` glyph in the leading gutter.
+-}
+indicatorArrow : SelectionIndicator
+indicatorArrow =
+    IndicatorArrow
+
+
+{-| Use a custom character as the selection indicator.
+
+    selectableList { ... } items
+        |> Layout.withSelectionIndicator (Layout.indicatorChar '→')
+
+-}
+indicatorChar : Char -> SelectionIndicator
+indicatorChar =
+    IndicatorChar
+
+
+{-| No leading indicator gutter. The selected row is still highlighted (via
+[`SelectionStyle`](#SelectionStyle)), but no indicator character is drawn and
+rows start at column 0 instead of being inset.
+-}
+indicatorNone : SelectionIndicator
+indicatorNone =
+    IndicatorNone
+
+
+{-| The default selection style — bold text and a blue background on the
+selected row when the pane is focused; bold only when the pane is unfocused
+(so you can still see where the cursor is in non-focused panes).
+-}
+selectionDefault : SelectionStyle
+selectionDefault =
+    SelectionDefault
+
+
+{-| Selection style that only applies bold to the selected row, with no
+background fill. Quieter than [`selectionDefault`](#selectionDefault), useful
+when the list lives next to other colored chrome.
+-}
+selectionSubtle : SelectionStyle
+selectionSubtle =
+    SelectionSubtle
+
+
+{-| Customize the leading indicator. Defaults to [`indicatorArrow`](#indicatorArrow).
+
+    Layout.selectableList { ... } items
+        |> Layout.withSelectionIndicator Layout.indicatorNone
+
+-}
+withSelectionIndicator : SelectionIndicator -> PaneContent msg -> PaneContent msg
+withSelectionIndicator newIndicator paneContent =
+    case paneContent of
+        SelectableContent config ->
+            SelectableContent { config | indicator = newIndicator }
+
+        StaticContent _ ->
+            paneContent
+
+
+{-| Customize the selected-row visual treatment. Defaults to
+[`selectionDefault`](#selectionDefault).
+
+    Layout.selectableList { ... } items
+        |> Layout.withSelectionStyle Layout.selectionSubtle
+
+-}
+withSelectionStyle : SelectionStyle -> PaneContent msg -> PaneContent msg
+withSelectionStyle newStyle paneContent =
+    case paneContent of
+        SelectableContent config ->
+            SelectableContent { config | selectionStyle = newStyle }
+
+        StaticContent _ ->
+            paneContent
+
+
+{-| Apply the library's selection chrome (gutter indicator + bold/bg) to a
+row's content. Called by the render layer; not exposed.
+-}
+applySelectionChrome :
+    { indicator : SelectionIndicator
+    , style : SelectionStyle
+    , selected : Bool
+    , focused : Bool
+    }
+    -> Screen
+    -> Screen
+applySelectionChrome { indicator, style, selected, focused } body =
+    let
+        row : Screen
+        row =
+            case indicator of
+                IndicatorNone ->
+                    body
+
+                IndicatorArrow ->
+                    TuiScreen.concat [ TuiScreen.text (gutterText selected '▸'), body ]
+
+                IndicatorChar c ->
+                    TuiScreen.concat [ TuiScreen.text (gutterText selected c), body ]
+    in
+    if selected then
+        case style of
+            SelectionDefault ->
+                if focused then
+                    row |> TuiScreen.bold |> TuiScreen.bg Ansi.Color.blue
+
+                else
+                    row |> TuiScreen.bold
+
+            SelectionSubtle ->
+                row |> TuiScreen.bold
+
+    else
+        row
+
+
+gutterText : Bool -> Char -> String
+gutterText selected indicatorChar_ =
+    if selected then
+        String.fromChar indicatorChar_ ++ " "
+
+    else
+        "  "
 
 
 
@@ -4728,14 +4800,17 @@ getContentLine isFocused paneConfig ps maybeFilterState maybeSearchState maybeTr
                     renderSelectableRow isFocused selConfig ps maybeFilterState scrolledRow
 
 
+type alias SelectableConfigLike a =
+    { a
+        | renderContent : Int -> { selected : Bool, focused : Bool } -> Screen
+        , indicator : SelectionIndicator
+        , selectionStyle : SelectionStyle
+    }
+
+
 renderTreeRow :
     Bool
-    ->
-        { a
-            | renderItem : Int -> Screen
-            , renderSelected : Int -> Screen
-            , renderSelectedUnfocused : Int -> Screen
-        }
+    -> SelectableConfigLike a
     -> TreeRow
     -> Int
     -> Int
@@ -4774,23 +4849,26 @@ renderTreeRow isFocused selConfig treeRow scrolledRow selIdx =
         case treeRow.originalIndex of
             Just origIdx ->
                 let
-                    baseScreen : Screen
-                    baseScreen =
-                        if isSelected then
-                            if isFocused then
-                                selConfig.renderSelected origIdx
+                    rawContent : Screen
+                    rawContent =
+                        selConfig.renderContent origIdx
+                            { selected = isSelected, focused = isFocused }
 
-                            else
-                                selConfig.renderSelectedUnfocused origIdx
+                    indented : Screen
+                    indented =
+                        if treeRow.depth > 0 then
+                            TuiScreen.concat [ TuiScreen.text indent, rawContent ]
 
                         else
-                            selConfig.renderItem origIdx
+                            rawContent
                 in
-                if treeRow.depth > 0 then
-                    TuiScreen.concat [ TuiScreen.text indent, baseScreen ]
-
-                else
-                    baseScreen
+                applySelectionChrome
+                    { indicator = selConfig.indicator
+                    , style = selConfig.selectionStyle
+                    , selected = isSelected
+                    , focused = isFocused
+                    }
+                    indented
 
             Nothing ->
                 TuiScreen.empty
@@ -4798,48 +4876,37 @@ renderTreeRow isFocused selConfig treeRow scrolledRow selIdx =
 
 renderSelectableRow :
     Bool
-    ->
-        { a
-            | renderItem : Int -> Screen
-            , renderSelected : Int -> Screen
-            , renderSelectedUnfocused : Int -> Screen
-        }
+    -> SelectableConfigLike a
     -> PaneState
     -> Maybe FilterState
     -> Int
     -> Screen
 renderSelectableRow isFocused selConfig ps maybeFilterState scrolledRow =
+    let
+        renderAt : Int -> Bool -> Screen
+        renderAt index isSelected =
+            applySelectionChrome
+                { indicator = selConfig.indicator
+                , style = selConfig.selectionStyle
+                , selected = isSelected
+                , focused = isFocused
+                }
+                (selConfig.renderContent index
+                    { selected = isSelected, focused = isFocused }
+                )
+    in
     case maybeFilterState of
         Just fs ->
             if scrolledRow >= List.length fs.filteredIndices then
                 TuiScreen.empty
 
             else
-                let
-                    originalIndex : Int
-                    originalIndex =
-                        mapFilteredIndex scrolledRow (Just fs)
-                in
-                if scrolledRow == ps.selectedIndex then
-                    if isFocused then
-                        selConfig.renderSelected originalIndex
-
-                    else
-                        selConfig.renderSelectedUnfocused originalIndex
-
-                else
-                    selConfig.renderItem originalIndex
+                renderAt
+                    (mapFilteredIndex scrolledRow (Just fs))
+                    (scrolledRow == ps.selectedIndex)
 
         Nothing ->
-            if scrolledRow == ps.selectedIndex then
-                if isFocused then
-                    selConfig.renderSelected scrolledRow
-
-                else
-                    selConfig.renderSelectedUnfocused scrolledRow
-
-            else
-                selConfig.renderItem scrolledRow
+            renderAt scrolledRow (scrolledRow == ps.selectedIndex)
 
 
 resolveWidths : Int -> List Width -> List Int

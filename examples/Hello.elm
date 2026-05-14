@@ -114,58 +114,11 @@ miniGitLayout model =
         [ Layout.pane "items"
             { title = "Items", width = Layout.fill }
             (Layout.selectableList
-                { onSelect =
-                    SelectCommit
-                , view =
-                    \{ selection } item ->
-                        --Layout.content
-                        --Tui.Screen.text item.message
-                        case selection of
-                            Layout.Selected { focused } ->
-                                Tui.Screen.concat
-                                    [ Tui.Screen.text "▸"
-                                        |> (if focused then
-                                                Tui.Screen.fg Ansi.Color.yellow
-
-                                            else
-                                                identity
-                                           )
-                                        --, Tui.Screen.text " "
-                                        --, Tui.Screen.text commit.sha
-                                        |> (if focused then
-                                                Tui.Screen.fg Ansi.Color.yellow >> Tui.Screen.bold
-
-                                            else
-                                                Tui.Screen.bold
-                                           )
-                                    , Tui.Screen.text " "
-                                    , Tui.Screen.text item.message
-                                    ]
-                                    |> (if focused then
-                                            Tui.Screen.bg Ansi.Color.blue
-
-                                        else
-                                            identity
-                                       )
-
-                            Layout.NotSelected ->
-                                Tui.Screen.concat
-                                    [ Tui.Screen.text " "
-
-                                    --, Tui.Screen.text " "
-                                    --, Tui.Screen.text commit.sha |> Tui.Screen.dim
-                                    , Tui.Screen.text " "
-                                    , Tui.Screen.text item.message
-                                    ]
-
-                --Debug.todo ""
+                { onSelect = SelectCommit
+                , view = \item -> Tui.Screen.text item.message
                 }
-                [ { sha = ""
-                  , message = "Hello!"
-                  }
-                , { sha = ""
-                  , message = "Goodbye!"
-                  }
+                [ { sha = "", message = "Hello!" }
+                , { sha = "", message = "Goodbye!" }
                 ]
             )
         , Layout.pane "hello"

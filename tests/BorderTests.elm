@@ -49,14 +49,7 @@ suite =
                         { title = "Modules", width = Layout.fill }
                         (Layout.selectableList
                             { onSelect = identity
-                            , view =
-                                \{ selection } item ->
-                                    case selection of
-                                        Layout.Selected _ ->
-                                            Tui.Screen.text ("▸ " ++ item)
-
-                                        Layout.NotSelected ->
-                                            Tui.Screen.text ("  " ++ item)
+                            , view = Tui.Screen.text
                             }
                             (List.range 1 50 |> List.map (\i -> "Item " ++ String.fromInt i))
                         )
@@ -81,14 +74,7 @@ suite =
                         { title = "Modules", width = Layout.fill }
                         (Layout.selectableList
                             { onSelect = identity
-                            , view =
-                                \{ selection } item ->
-                                    case selection of
-                                        Layout.Selected _ ->
-                                            Tui.Screen.text ("▸ " ++ item)
-
-                                        Layout.NotSelected ->
-                                            Tui.Screen.text ("  " ++ item)
+                            , view = Tui.Screen.text
                             }
                             (List.range 1 50 |> List.map (\i -> "Item " ++ String.fromInt i))
                         )
@@ -118,7 +104,7 @@ suite =
                         { title = "Modules", width = Layout.fill }
                         (Layout.selectableList
                             { onSelect = identity
-                            , view = \_ item -> Tui.Screen.text item
+                            , view = Tui.Screen.text
                             }
                             (items 51)
                         )
@@ -127,7 +113,7 @@ suite =
                         { title = "Items", width = Layout.fill }
                         (Layout.selectableList
                             { onSelect = identity
-                            , view = \_ item -> Tui.Screen.text item
+                            , view = Tui.Screen.text
                             }
                             (items 2)
                         )

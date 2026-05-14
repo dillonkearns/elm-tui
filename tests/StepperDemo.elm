@@ -1,7 +1,8 @@
-module StepperDemo exposing (tuiTests)
+module StepperDemo exposing (suite, tuiTests)
 
 import Ansi.Color
 import BackendTask
+import Test exposing (Test)
 import Test.BackendTask as BackendTaskTest
 import Test.Tui as TuiTest
 import Tui
@@ -10,6 +11,11 @@ import Tui.Layout.Effect as Effect
 import Tui.Layout.Test as LayoutTest
 import Tui.Screen
 import Tui.Sub
+
+
+suite : Test
+suite =
+    TuiTest.toTest tuiTests
 
 
 tuiTests : TuiTest.Test
@@ -62,21 +68,7 @@ appView _ _ =
             { title = "Left", width = Layout.fill }
             (Layout.selectableList
                 { onSelect = SelectItem
-                , view =
-                    \{ selection } item ->
-                        case selection of
-                            Layout.Selected { focused } ->
-                                Tui.Screen.text ("▸ " ++ item)
-                                    |> Tui.Screen.bold
-                                    |> (if focused then
-                                            Tui.Screen.bg Ansi.Color.blue
-
-                                        else
-                                            identity
-                                       )
-
-                            Layout.NotSelected ->
-                                Tui.Screen.text ("  " ++ item)
+                , view = Tui.Screen.text
                 }
                 items
             )
