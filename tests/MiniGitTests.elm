@@ -16,7 +16,7 @@ suite =
             [ test "initial view shows commit list with first selected" <|
                 \() ->
                     TuiTest.expect miniGitTest
-                        [ TuiTest.ensureViewHas "▸ abc1234"
+                        [ TuiTest.ensureViewHasStyled [ TuiTest.bold ] "abc1234"
                         , TuiTest.ensureViewHas "def5678"
                         , TuiTest.expectRunning
                         ]
@@ -24,7 +24,7 @@ suite =
                 \() ->
                     TuiTest.expect miniGitTest
                         [ TuiTest.pressKey 'j'
-                        , TuiTest.ensureViewHas "▸ def5678"
+                        , TuiTest.ensureViewHasStyled [ TuiTest.bold ] "def5678"
                         , TuiTest.expectRunning
                         ]
             , test "k moves selection up" <|
@@ -32,7 +32,7 @@ suite =
                     TuiTest.expect miniGitTest
                         [ TuiTest.pressKey 'j'
                         , TuiTest.pressKey 'k'
-                        , TuiTest.ensureViewHas "▸ abc1234"
+                        , TuiTest.ensureViewHasStyled [ TuiTest.bold ] "abc1234"
                         , TuiTest.expectRunning
                         ]
             , test "q exits" <|
@@ -47,21 +47,21 @@ suite =
                 \() ->
                     TuiTest.expect miniGitTest
                         [ TuiTest.click { row = 2, col = 5 }
-                        , TuiTest.ensureViewHas "▸ def5678"
+                        , TuiTest.ensureViewHasStyled [ TuiTest.bold ] "def5678"
                         , TuiTest.expectRunning
                         ]
             , test "clickText finds and clicks by content" <|
                 \() ->
                     TuiTest.expect miniGitTest
                         [ TuiTest.clickText "345cdef"
-                        , TuiTest.ensureViewHas "▸ 345cdef"
+                        , TuiTest.ensureViewHasStyled [ TuiTest.bold ] "345cdef"
                         , TuiTest.expectRunning
                         ]
             , test "clickText on last item" <|
                 \() ->
                     TuiTest.expect miniGitTest
                         [ TuiTest.clickText "bbb2222"
-                        , TuiTest.ensureViewHas "▸ bbb2222"
+                        , TuiTest.ensureViewHasStyled [ TuiTest.bold ] "bbb2222"
                         , TuiTest.expectRunning
                         ]
             , test "clickText fails with helpful message when text not found" <|
@@ -177,7 +177,7 @@ suite =
 
                         -- j should type into input, not navigate commits
                         , TuiTest.ensureViewHas "jjj"
-                        , TuiTest.ensureViewHas "▸ abc1234"
+                        , TuiTest.ensureViewHasStyled [ TuiTest.bold ] "abc1234"
                         , TuiTest.expectRunning
                         ]
             ]
@@ -222,7 +222,7 @@ suite =
                 \() ->
                     TuiTest.expect miniGitTest
                         [ TuiTest.paste "should be ignored"
-                        , TuiTest.ensureViewHas "▸ abc1234"
+                        , TuiTest.ensureViewHasStyled [ TuiTest.bold ] "abc1234"
                         , TuiTest.ensureViewDoesNotHave "should be ignored"
                         , TuiTest.expectRunning
                         ]
@@ -357,14 +357,14 @@ suite =
                 \() ->
                     TuiTest.expect miniGitTest
                         [ TuiTest.pressKey 'j'
-                        , TuiTest.ensureViewHas "▸ def5678"
+                        , TuiTest.ensureViewHasStyled [ TuiTest.bold ] "def5678"
                         , TuiTest.expectRunning
                         ]
             , test "down arrow navigates as alternate key" <|
                 \() ->
                     TuiTest.expect miniGitTest
                         [ TuiTest.pressKeyWith { key = Tui.Sub.Arrow Tui.Sub.Down, modifiers = [] }
-                        , TuiTest.ensureViewHas "▸ def5678"
+                        , TuiTest.ensureViewHasStyled [ TuiTest.bold ] "def5678"
                         , TuiTest.expectRunning
                         ]
             ]

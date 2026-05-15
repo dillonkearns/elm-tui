@@ -238,7 +238,8 @@ type PaneContent msg
 
 
 {-| Indicator drawn in the leading gutter of a selectable list. The default is
-[`indicatorArrow`](#indicatorArrow). To customize, use
+[`indicatorNone`](#indicatorNone) — selection is communicated by the row's
+highlight style (bold + bg). Opt into an indicator with
 [`withSelectionIndicator`](#withSelectionIndicator).
 -}
 type SelectionIndicator
@@ -480,9 +481,10 @@ indicator gutter and highlights the selected row.
         }
         model.commits
 
-The selected row gets a leading `▸` indicator, bold text, and a blue background
-when the pane is focused (bold only when unfocused). To customize this chrome,
-see [`withSelectionIndicator`](#withSelectionIndicator) and
+The selected row gets bold text and a blue background when the pane is focused
+(bold only when unfocused) — same convention as lazygit. To add a leading
+indicator glyph or change the highlight style, see
+[`withSelectionIndicator`](#withSelectionIndicator) and
 [`withSelectionStyle`](#withSelectionStyle).
 
 For cases where the row content itself needs to vary based on selection state
@@ -571,12 +573,13 @@ selectableListAdvanced config items =
                             |> config.onSelect
                 , filterText = Nothing
                 , treeConfig = Nothing
-                , indicator = IndicatorArrow
+                , indicator = IndicatorNone
                 , selectionStyle = SelectionDefault
                 }
 
 
-{-| The default selection indicator — a `▸` glyph in the leading gutter.
+{-| A `▸` glyph in the leading gutter (1-char + 1-space gutter). Common in
+pickers (fzf, helix).
 -}
 indicatorArrow : SelectionIndicator
 indicatorArrow =
@@ -594,9 +597,9 @@ indicatorChar =
     IndicatorChar
 
 
-{-| No leading indicator gutter. The selected row is still highlighted (via
-[`SelectionStyle`](#SelectionStyle)), but no indicator character is drawn and
-rows start at column 0 instead of being inset.
+{-| No leading indicator gutter (the default). The selected row is highlighted
+via [`SelectionStyle`](#SelectionStyle) only, and rows start at column 0
+instead of being inset.
 -}
 indicatorNone : SelectionIndicator
 indicatorNone =
