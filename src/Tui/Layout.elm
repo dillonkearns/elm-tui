@@ -1636,10 +1636,6 @@ selectedItem paneId items layout (State s) =
         filterState =
             Dict.get stateKey s.filterStates
 
-        filteredIdx : Int
-        filteredIdx =
-            mapFilteredIndex idx filterState
-
         -- Map through tree if active
         treeConfig : Maybe { toPath : Int -> List String }
         treeConfig =
@@ -1661,9 +1657,7 @@ selectedItem paneId items layout (State s) =
                     rows =
                         buildTreeRows tc.toPath totalCount treeState
                 in
-                rows
-                    |> List.drop idx
-                    |> List.head
+                clampedItemAt idx rows
                     |> Maybe.andThen
                         (\row ->
                             case row.originalIndex of
@@ -1676,10 +1670,59 @@ selectedItem paneId items layout (State s) =
                         )
 
             else
-                List.drop filteredIdx items |> List.head
+                clampedItemFromFilter idx filterState items
 
         Nothing ->
-            List.drop filteredIdx items |> List.head
+            clampedItemFromFilter idx filterState items
+
+
+{-| Return the item at the given index, clamping the index into the valid
+range `[0, length-1]`. Returns `Nothing` only when the list is empty.
+
+Lazygit-style: a stale `selectedIndex` past the new end of the list resolves
+to the new last item rather than `Nothing`. See
+`pkg/gui/context/traits/list_cursor.go:84` (`clampValue`) in lazygit.
+
+-}
+clampedItemAt : Int -> List a -> Maybe a
+clampedItemAt idx items =
+    case items of
+        [] ->
+            Nothing
+
+        _ ->
+            let
+                clamped : Int
+                clamped =
+                    max 0 (min (List.length items - 1) idx)
+            in
+            List.drop clamped items |> List.head
+
+
+{-| Look up an item respecting an optional active filter. The raw `idx` is
+the cursor position in _filter space_ when a filter is active, otherwise in
+the items list. Clamps `idx` against the effective length before indexing.
+-}
+clampedItemFromFilter : Int -> Maybe FilterState -> List a -> Maybe a
+clampedItemFromFilter idx filterState items =
+    case filterState of
+        Just fs ->
+            case fs.filteredIndices of
+                [] ->
+                    Nothing
+
+                indices ->
+                    let
+                        clamped : Int
+                        clamped =
+                            max 0 (min (List.length indices - 1) idx)
+                    in
+                    List.drop clamped indices
+                        |> List.head
+                        |> Maybe.andThen (\origIdx -> List.drop origIdx items |> List.head)
+
+        Nothing ->
+            clampedItemAt idx items
 
 
 {-| Switch the active tab for a pane group. Updates the internal mapping
@@ -1975,8 +2018,11 @@ case Layout.handleKeyEvent event layout model.layout of
 
 -}
 handleKeyEvent : Tui.Sub.KeyEvent -> Layout msg -> State -> ( State, Maybe msg, Bool )
-handleKeyEvent event layout (State s) =
+handleKeyEvent event layout state =
     let
+        (State s) =
+            autoFocusFirstPane layout state
+
         focusedId : Maybe String
         focusedId =
             s.focusedPaneId
@@ -3871,8 +3917,12 @@ returns the updated state plus an optional user message from click handlers.
 Pass the terminal context for correct pane hit-testing.
 -}
 handleMouse : MouseEvent -> { width : Int, height : Int } -> Layout msg -> State -> ( State, Maybe msg )
-handleMouse mouseEvent ctx layout (State s) =
+handleMouse mouseEvent ctx layout state =
     let
+        normalized : State
+        normalized =
+            autoFocusFirstPane layout state
+
         panes : List (PaneConfig msg)
         panes =
             case layout of
@@ -3882,7 +3932,7 @@ handleMouse mouseEvent ctx layout (State s) =
                 Vertical ps ->
                     ps
     in
-    handleMouseInternal mouseEvent ctx panes (State s)
+    handleMouseInternal mouseEvent ctx panes normalized
 
 
 handleMouseInternal : MouseEvent -> { width : Int, height : Int } -> List (PaneConfig msg) -> State -> ( State, Maybe msg )
@@ -4180,7 +4230,11 @@ you can replace specific rows with modal content, then wrap with `TuiScreen.line
 
 -}
 toRows : State -> Layout msg -> List Screen
-toRows (State s) layout =
+toRows state layout =
+    let
+        (State s) =
+            autoFocusFirstPane layout state
+    in
     case layout of
         Horizontal panes ->
             toRowsHorizontal s panes
@@ -5271,17 +5325,34 @@ succeedTask a =
 
 autoFocusFirstPane : Layout msg -> State -> State
 autoFocusFirstPane layout state =
-    case focusedPane state of
-        Just _ ->
-            state
+    let
+        paneIds : List String
+        paneIds =
+            extractPaneIds layout
 
-        Nothing ->
-            case extractPaneIds layout of
-                firstId :: _ ->
-                    focusPane firstId state
+        currentFocus : Maybe String
+        currentFocus =
+            focusedPane state
 
-                [] ->
-                    state
+        focusIsValid : Bool
+        focusIsValid =
+            case currentFocus of
+                Just paneId ->
+                    List.member paneId paneIds
+
+                Nothing ->
+                    False
+    in
+    if focusIsValid then
+        state
+
+    else
+        case paneIds of
+            firstId :: _ ->
+                focusPane firstId state
+
+            [] ->
+                state
 
 
 extractPaneIds : Layout msg -> List String
