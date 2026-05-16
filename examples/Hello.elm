@@ -9,15 +9,11 @@ import Tui.Screen
 
 
 type alias Item =
-    { sha : String, message : String }
+    { message : String
+    , definition : String
+    }
 
 
-{-| The only state this app needs. Selection lives in the framework's
-layout state; `selectedItem` is kept in sync automatically because
-`Layout.program` fires `onSelect` for the focused pane's initial
-selection at startup (and on every navigation after that). There is no
-init-time "forgot to set the selected item" bug to introduce.
--}
 type alias Model =
     { selectedItem : Maybe Item
     , modal : Maybe ModalState
@@ -40,8 +36,8 @@ type Msg
 
 items : List Item
 items =
-    [ { sha = "a1b2c3d", message = "Hello!" }
-    , { sha = "e4f5a6b", message = "Goodbye!" }
+    [ { message = "Hello!", definition = "Hello def" }
+    , { message = "Goodbye!", definition = "Goodbye def" }
     ]
 
 
@@ -99,7 +95,7 @@ view _ model =
             (Layout.content
                 [ Tui.Screen.text
                     (model.selectedItem
-                        |> Maybe.map .message
+                        |> Maybe.map .definition
                         |> Maybe.withDefault ""
                     )
                 ]
