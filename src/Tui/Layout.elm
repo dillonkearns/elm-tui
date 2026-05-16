@@ -1,6 +1,6 @@
 module Tui.Layout exposing
     ( Layout, Pane, horizontal, vertical, pane, paneGroup, TabConfig
-    , PaneContent, content, selectableList, selectableListAdvanced, withFilterable, withSearchable, withTreeView
+    , PaneContent, content, paragraph, selectableList, selectableListAdvanced, withFilterable, withSearchable, withTreeView
     , SelectionIndicator, indicatorArrow, indicatorChar, indicatorNone, withSelectionIndicator
     , SelectionStyle, selectionDefault, selectionSubtle, withSelectionStyle
     , Modal, promptModal, confirmModal, pickerModal, menuModal, helpModal
@@ -62,7 +62,7 @@ modals, and status together automatically, see [`program`](#program).
 
 ## Pane Content
 
-@docs PaneContent, content, selectableList, selectableListAdvanced, withFilterable, withSearchable, withTreeView
+@docs PaneContent, content, paragraph, selectableList, selectableListAdvanced, withFilterable, withSearchable, withTreeView
 
 
 ### Selection Chrome
@@ -222,7 +222,7 @@ inspired by lazygit's `renderOnlyVisibleLines` and Ratatui's `ListState`).
 
 -}
 type PaneContent msg
-    = StaticContent { lines : Array.Array Screen, lineCount : Int, searchable : Bool }
+    = StaticContent { lines : Array.Array Screen, lineCount : Int, searchable : Bool, wrap : Bool }
     | SelectableContent
         { itemCount : Int
         , renderContent :
@@ -391,7 +391,7 @@ paneGroup groupId config =
                 |> List.filter (\tab -> tab.id == config.activeTab)
                 |> List.head
                 |> Maybe.map .content
-                |> Maybe.withDefault (StaticContent { lines = Array.empty, lineCount = 0, searchable = False })
+                |> Maybe.withDefault (StaticContent { lines = Array.empty, lineCount = 0, searchable = False, wrap = False })
 
         -- Build styled title: active tab bold, inactive dim
         titleScreen : Screen
@@ -458,11 +458,36 @@ pane id config paneContent =
         }
 
 
-{-| Static content — a list of screens, one per line. No selection behavior.
+{-| Static content — a list of screens, one per line. Lines wider than the
+pane are truncated (use this for pre-laid-out bodies like diffs or logs that
+you scroll). For flowing prose that should reflow to the pane width, see
+[`paragraph`](#paragraph).
 -}
 content : List Screen -> PaneContent msg
 content lines =
-    StaticContent { lines = Array.fromList lines, lineCount = List.length lines, searchable = False }
+    StaticContent { lines = Array.fromList lines, lineCount = List.length lines, searchable = False, wrap = False }
+
+
+{-| Flowing text that reflows to the pane's width automatically — no manual
+width math. Embedded newlines are kept as hard breaks; everything else wraps.
+
+    Layout.pane "definition"
+        { title = "Definition", width = Layout.fillPortion 2 }
+        (Layout.paragraph entry.definition)
+
+Intended for short, descriptive bodies (definitions, help text, summaries)
+that fit without scrolling. For long scrollable documents, pre-split the
+lines yourself and use [`content`](#content).
+
+-}
+paragraph : String -> PaneContent msg
+paragraph text =
+    StaticContent
+        { lines = Array.fromList [ TuiScreen.text text ]
+        , lineCount = 1
+        , searchable = False
+        , wrap = True
+        }
 
 
 {-| A selectable list with library-managed selection chrome. Provide a `view`
@@ -551,7 +576,7 @@ selectableListAdvanced :
 selectableListAdvanced config items =
     case items of
         [] ->
-            StaticContent { lines = Array.empty, lineCount = 0, searchable = False }
+            StaticContent { lines = Array.empty, lineCount = 0, searchable = False, wrap = False }
 
         first :: _ ->
             let
@@ -4131,7 +4156,7 @@ handleMouseInternal mouseEvent ctx panes (State s) =
                             maybeLinkUrl =
                                 case config.onLinkClick of
                                     Just _ ->
-                                        getContentLine True config ps Nothing Nothing Nothing contentRow
+                                        getContentLine True sWithCtx.context.width config ps Nothing Nothing Nothing contentRow
                                             |> resolveHyperlinkAt localCol
 
                                     Nothing ->
@@ -4499,7 +4524,7 @@ toRowsHorizontal s panes =
 
                                     lineScreen : Screen
                                     lineScreen =
-                                        getContentLine isFocused paneConfig ps renderFilterState renderSearchState renderTreeState contentRow
+                                        getContentLine isFocused innerW paneConfig ps renderFilterState renderSearchState renderTreeState contentRow
 
                                     lineText : String
                                     lineText =
@@ -4755,7 +4780,7 @@ toRowsVertical s panes =
                                 let
                                     lineScreen : Screen
                                     lineScreen =
-                                        getContentLine isFocused paneConfig ps vertFilterState vertSearchState vertTreeState contentRow
+                                        getContentLine isFocused innerW paneConfig ps vertFilterState vertSearchState vertTreeState contentRow
 
                                     lineText : String
                                     lineText =
@@ -4816,19 +4841,30 @@ toRowsVertical s panes =
         |> List.concat
 
 
-getContentLine : Bool -> PaneConfig msg -> PaneState -> Maybe FilterState -> Maybe SearchState -> Maybe TreeState -> Int -> Screen
-getContentLine isFocused paneConfig ps maybeFilterState maybeSearchState maybeTreeState contentRow =
+getContentLine : Bool -> Int -> PaneConfig msg -> PaneState -> Maybe FilterState -> Maybe SearchState -> Maybe TreeState -> Int -> Screen
+getContentLine isFocused innerWidth paneConfig ps maybeFilterState maybeSearchState maybeTreeState contentRow =
     let
         scrolledRow : Int
         scrolledRow =
             contentRow + ps.scrollOffset
     in
     case paneConfig.paneContent of
-        StaticContent { lines } ->
+        StaticContent { lines, wrap } ->
             let
+                displayLines : Array.Array Screen
+                displayLines =
+                    if wrap then
+                        lines
+                            |> Array.toList
+                            |> List.concatMap (TuiScreen.wrapWidth (max 1 innerWidth))
+                            |> Array.fromList
+
+                    else
+                        lines
+
                 baseLine : Screen
                 baseLine =
-                    Array.get scrolledRow lines
+                    Array.get scrolledRow displayLines
                         |> Maybe.withDefault TuiScreen.empty
             in
             case maybeSearchState of

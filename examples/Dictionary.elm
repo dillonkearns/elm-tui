@@ -73,7 +73,7 @@ update _ msg model =
 
 
 view : Tui.Context -> Model -> Layout.Layout Msg
-view ctx model =
+view _ model =
     Layout.horizontal
         [ Layout.pane "words"
             { title = "Words", width = Layout.fill }
@@ -85,14 +85,10 @@ view ctx model =
             )
         , Layout.pane "definition"
             { title = "Definition", width = Layout.fillPortion 2 }
-            (Layout.content
+            (Layout.paragraph
                 (model.selected
-                    |> Maybe.map
-                        (\entry ->
-                            Tui.Screen.text entry.definition
-                                |> Tui.Screen.wrapWidth (max 10 (ctx.width * 2 // 3 - 6))
-                        )
-                    |> Maybe.withDefault []
+                    |> Maybe.map .definition
+                    |> Maybe.withDefault ""
                 )
             )
         ]
