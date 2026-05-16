@@ -5693,6 +5693,12 @@ handleKeyPressedRouting config keyEvent (FrameworkModel fw) =
 
         HelpInteraction helpState ->
             case keyEvent.key of
+                -- `q` quits even from the help overlay (browse-only, no text
+                -- input) — global precedence, same as Ctrl-C. Esc only closes
+                -- the overlay; `q` exits the app.
+                Tui.Sub.Character 'q' ->
+                    ( FrameworkModel fw, Effect.exit )
+
                 Tui.Sub.Escape ->
                     if fw.builtInHelpOpen then
                         -- Framework-owned help (opened via built-in `?`):
