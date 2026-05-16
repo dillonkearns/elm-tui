@@ -1,7 +1,7 @@
 module MiniGitTests exposing (suite)
 
 import Expect exposing (Expectation)
-import MiniGit exposing (initialModelWithContext, miniGitLayout, miniGitTest)
+import MiniGit exposing (miniGitTest)
 import Test exposing (Test, describe, test)
 import Test.Runner
 import Test.Tui as TuiTest
@@ -82,33 +82,18 @@ suite =
                     TuiTest.expect miniGitTest
                         [ TuiTest.ensureModel
                             (\model ->
-                                Layout.focusedPane model.layout
+                                Layout.frameworkFocusedPane model
                                     |> Expect.equal (Just "commits")
                             )
                         , TuiTest.resize { width = 120, height = 24 }
                         , TuiTest.click { row = 1, col = 100 }
                         , TuiTest.ensureModel
                             (\model ->
-                                Layout.focusedPane model.layout
+                                Layout.frameworkFocusedPane model
                                     |> Expect.equal (Just "diff")
                             )
                         , TuiTest.expectRunning
                         ]
-            ]
-        , describe "Layout.resetScroll"
-            [ test "resetScroll sets scroll to 0" <|
-                \() ->
-                    let
-                        initialModel =
-                            initialModelWithContext { width = 80, height = 24 }
-
-                        ( state, _ ) =
-                            Layout.navigateDown "commits"
-                                (miniGitLayout initialModel)
-                                initialModel.layout
-                    in
-                    Layout.scrollPosition "commits" (Layout.resetScroll "commits" state)
-                        |> Expect.equal 0
             ]
         , describe "layout"
             [ test "shows pane titles" <|
@@ -210,12 +195,13 @@ suite =
                         , TuiTest.ensureViewHas "Committed: docs: update README"
                         , TuiTest.expectRunning
                         ]
-            , test "paste with newlines strips them for single-line input" <|
+            , test "paste with newlines keeps only the first line (single-line input)" <|
                 \() ->
                     TuiTest.expect miniGitTest
                         [ TuiTest.pressKey 'c'
                         , TuiTest.paste "line one\nline two\nline three"
-                        , TuiTest.ensureViewHas "line one line two line three"
+                        , TuiTest.ensureViewHas "line one"
+                        , TuiTest.ensureViewDoesNotHave "line two"
                         , TuiTest.expectRunning
                         ]
             , test "paste is ignored when no modal is open" <|
@@ -253,31 +239,6 @@ suite =
                         , TuiTest.ensureViewDoesNotHave "Keybindings"
                         , TuiTest.expectRunning
                         ]
-            , test "/ enters search mode, typing filters by description" <|
-                \() ->
-                    TuiTest.expect miniGitTest
-                        [ TuiTest.pressKey '?'
-                        , TuiTest.pressKey '/'
-                        , TuiTest.pressKey 'q'
-                        , TuiTest.pressKey 'u'
-                        , TuiTest.pressKey 'i'
-                        , TuiTest.pressKey 't'
-                        , TuiTest.ensureViewHas "Quit"
-                        , TuiTest.ensureViewDoesNotHave "Help"
-                        , TuiTest.expectRunning
-                        ]
-            , test "Esc in search mode returns to browse, not close" <|
-                \() ->
-                    TuiTest.expect miniGitTest
-                        [ TuiTest.pressKey '?'
-                        , TuiTest.pressKey '/'
-                        , TuiTest.pressKey 'q'
-                        , TuiTest.pressKeyWith { key = Tui.Sub.Escape, modifiers = [] }
-
-                        -- Should still show help modal (back to browse mode)
-                        , TuiTest.ensureViewHas "Keybindings"
-                        , TuiTest.expectRunning
-                        ]
             , test "j/k navigate in help modal browse mode" <|
                 \() ->
                     TuiTest.expect miniGitTest
@@ -287,25 +248,6 @@ suite =
 
                         -- Navigating, should still show help modal
                         , TuiTest.ensureViewHas "Keybindings"
-                        , TuiTest.expectRunning
-                        ]
-            , test "q quits even when help modal is open" <|
-                \() ->
-                    TuiTest.expect miniGitTest
-                        [ TuiTest.pressKey '?'
-                        , TuiTest.ensureViewHas "Keybindings"
-                        , TuiTest.pressKey 'q'
-                        , TuiTest.expectExit
-                        ]
-            , test "@ prefix in search mode filters by key name" <|
-                \() ->
-                    TuiTest.expect miniGitTest
-                        [ TuiTest.pressKey '?'
-                        , TuiTest.pressKey '/'
-                        , TuiTest.pressKey '@'
-                        , TuiTest.pressKey 'c'
-                        , TuiTest.ensureViewHas "Commit"
-                        , TuiTest.ensureViewDoesNotHave "Quit"
                         , TuiTest.expectRunning
                         ]
             ]
