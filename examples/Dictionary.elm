@@ -30,7 +30,6 @@ type alias Model =
 
 type Msg
     = Select Entry
-    | Quit
 
 
 dictionary : BackendTask FatalError (List Entry)
@@ -53,7 +52,7 @@ run =
         , init = \entries -> ( { entries = entries, selected = Nothing }, Effect.none )
         , update = update
         , view = view
-        , bindings = \_ _ -> [ Layout.group "Keys" [ Layout.charBinding 'q' "Quit" Quit ] ]
+        , bindings = \_ _ -> []
         , status = \_ -> { waiting = Nothing }
         , modal = \_ -> Nothing
         , onRawEvent = Nothing
@@ -67,9 +66,6 @@ update _ msg model =
     case msg of
         Select entry ->
             ( { model | selected = Just entry }, Effect.none )
-
-        Quit ->
-            ( model, Effect.exit )
 
 
 view : Tui.Context -> Model -> Layout.Layout Msg

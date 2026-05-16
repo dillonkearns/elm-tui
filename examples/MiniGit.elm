@@ -42,7 +42,6 @@ type Msg
     | OpenHelp
     | CloseModal
     | SubmitCommit String
-    | Quit
 
 
 sampleCommits : List Commit
@@ -117,9 +116,6 @@ update _ msg model =
                 )
             )
 
-        Quit ->
-            ( model, Effect.exit )
-
 
 view : Tui.Context -> Model -> Layout.Layout Msg
 view _ model =
@@ -157,8 +153,7 @@ view _ model =
 bindings : { focusedPane : Maybe String } -> Model -> List (Layout.Group Msg)
 bindings _ _ =
     [ Layout.group "Global"
-        [ Layout.charBinding 'q' "Quit" Quit
-        , Layout.charBinding 'c' "Commit" OpenCommit
+        [ Layout.charBinding 'c' "Commit" OpenCommit
         , Layout.charBinding '?' "Help" OpenHelp
         ]
     ]

@@ -5576,7 +5576,28 @@ handleKeyPressed :
     -> Tui.Sub.KeyEvent
     -> FrameworkModel model msg
     -> ( FrameworkModel model msg, Effect (FrameworkMsg msg) )
-handleKeyPressed config keyEvent (FrameworkModel fw) =
+handleKeyPressed config keyEvent frameworkModel =
+    -- Ctrl-C always quits, regardless of modal/filter/focus state. This is
+    -- the universal escape hatch — apps cannot trap it.
+    if keyEvent.key == Tui.Sub.Character 'c' && List.member Tui.Sub.Ctrl keyEvent.modifiers then
+        ( frameworkModel, Effect.exit )
+
+    else
+        handleKeyPressedRouting config keyEvent frameworkModel
+
+
+handleKeyPressedRouting :
+    { a
+        | update : UpdateContext -> msg -> model -> ( model, LayoutEffect.Effect msg )
+        , view : Tui.Context -> model -> Layout msg
+        , bindings : { focusedPane : Maybe String } -> model -> List (Group msg)
+        , modal : model -> Maybe (Modal msg)
+        , onRawEvent : Maybe (RawEvent -> msg)
+    }
+    -> Tui.Sub.KeyEvent
+    -> FrameworkModel model msg
+    -> ( FrameworkModel model msg, Effect (FrameworkMsg msg) )
+handleKeyPressedRouting config keyEvent (FrameworkModel fw) =
     -- If modal is active, route to modal handler first
     case fw.modalState of
         NoModal ->
@@ -5961,7 +5982,15 @@ handleKeyPressedNoModal config keyEvent (FrameworkModel fw) =
                         applyUserMsg config (toMsg (UnhandledKey keyEvent)) (FrameworkModel { fw | layoutState = newLayoutState })
 
                     Nothing ->
-                        ( FrameworkModel { fw | layoutState = newLayoutState }, Effect.none )
+                        -- Default quit: 'q' exits when nothing else claimed it.
+                        -- Bind 'q' yourself (or use onRawEvent) to override.
+                        -- Filter/search capture 'q' earlier, so this only
+                        -- fires in normal mode.
+                        if keyEvent.key == Tui.Sub.Character 'q' && List.isEmpty keyEvent.modifiers then
+                            ( FrameworkModel { fw | layoutState = newLayoutState }, Effect.exit )
+
+                        else
+                            ( FrameworkModel { fw | layoutState = newLayoutState }, Effect.none )
 
 
 {-| Try navigate (for selectable panes) or fall back to scroll (for content panes).
@@ -6091,6 +6120,7 @@ builtInHelpRows =
     , Tui.Keybinding.infoRow "esc" "Exit mode"
     , Tui.Keybinding.infoRow ">/pgdn" "Page down"
     , Tui.Keybinding.infoRow "</pgup" "Page up"
+    , Tui.Keybinding.infoRow "q/ctrl+c" "Quit"
     ]
 
 
