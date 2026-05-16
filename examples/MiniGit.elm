@@ -83,8 +83,7 @@ miniGitProgram =
 run : Script
 run =
     miniGitProgram
-        |> Tui.program
-        |> Tui.toScript
+        |> Layout.toScript
 
 
 update : Layout.UpdateContext -> Msg -> Model -> ( Model, Effect Msg )

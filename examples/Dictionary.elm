@@ -1,12 +1,5 @@
 module Dictionary exposing (run)
 
-{-| The simplest end-to-end Tui.Layout.program app: load data with a
-BackendTask, show it in a selectable list, and derive a detail pane from
-the selection. The selected entry is kept correct from the very first
-frame — `Tui.Layout.program` fires `onSelect` for the focused pane's
-initial selection at startup, so there is no init wiring to get wrong.
--}
-
 import BackendTask exposing (BackendTask)
 import BackendTask.File
 import FatalError exposing (FatalError)
@@ -57,8 +50,7 @@ run =
         , modal = \_ -> Nothing
         , onRawEvent = Nothing
         }
-        |> Tui.program
-        |> Tui.toScript
+        |> Layout.toScript
 
 
 update : Layout.UpdateContext -> Msg -> Model -> ( Model, Effect Msg )

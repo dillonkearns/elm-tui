@@ -19,7 +19,7 @@ module Tui.Layout exposing
     , navigationHelpRows
     , isFilterActive, filterStatusBar, activeFilterStatusBar
     , isSearchActive, searchStatusBar
-    , program, FrameworkModel, FrameworkMsg
+    , program, toScript, FrameworkModel, FrameworkMsg
     , frameworkFocusedPane, frameworkSelectedIndex, frameworkScrollPosition, frameworkUserModel
     , RawEvent(..), ScrollDirection(..)
     , UpdateContext
@@ -151,7 +151,7 @@ j/k/arrow navigation, scroll, mouse dispatch, modals, status toasts, and the
 options bar — so your app only needs `init`, `update`, `view`, `bindings`,
 `status`, and `modal`.
 
-@docs program, FrameworkModel, FrameworkMsg
+@docs program, toScript, FrameworkModel, FrameworkMsg
 
 @docs frameworkFocusedPane, frameworkSelectedIndex, frameworkScrollPosition, frameworkUserModel
 
@@ -167,6 +167,7 @@ import BackendTask exposing (BackendTask)
 import Char
 import Dict exposing (Dict)
 import FatalError exposing (FatalError)
+import Pages.Script
 import Set exposing (Set)
 import String.Graphemes as Graphemes
 import Tui
@@ -5263,6 +5264,27 @@ program config =
     , view = compileView config
     , subscriptions = compileSubscriptions config
     }
+
+
+{-| Finalize a [`program`](#program) into a runnable `Pages.Script.Script`.
+
+    run : Script
+    run =
+        Layout.program { data = ..., init = ..., update = ..., view = ... }
+            |> Layout.toScript
+
+Equivalent to `Tui.program >> Tui.toScript`, but keeps the whole pipeline
+in the `Tui.Layout` namespace so the canonical incantation reads
+`Layout.program … |> Layout.toScript` instead of mixing in `Tui.program`.
+Keep the intermediate [`program`](#program) value (don't inline this) when
+you also want to drive the app from `Test.Tui` — `TuiTest.start` takes the
+`program` config directly.
+
+-}
+toScript : Tui.ProgramConfig data model msg -> Pages.Script.Script
+toScript programConfig =
+    Tui.program programConfig
+        |> Tui.toScript
 
 
 
