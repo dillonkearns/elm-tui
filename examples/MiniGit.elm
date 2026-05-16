@@ -66,18 +66,16 @@ diffForCommit sha =
            )
 
 
-miniGitProgram : Tui.ProgramConfig () (Layout.FrameworkModel Model Msg) (Layout.FrameworkMsg Msg)
+miniGitProgram : Layout.Program () Model Msg
 miniGitProgram =
     Layout.program
         { data = BackendTask.succeed ()
         , init = \_ -> ( { selectedCommit = Nothing, modal = Nothing }, Effect.none )
         , update = update
         , view = view
-        , bindings = bindings
-        , status = \_ -> { waiting = Nothing }
-        , modal = modal
-        , onRawEvent = Nothing
         }
+        |> Layout.withBindings bindings
+        |> Layout.withModal modal
 
 
 run : Script
@@ -167,4 +165,4 @@ modal model =
 
 miniGitTest : TuiTest.TuiTest (Layout.FrameworkModel Model Msg) (Layout.FrameworkMsg Msg)
 miniGitTest =
-    TuiTest.start BackendTaskTest.init miniGitProgram
+    TuiTest.start BackendTaskTest.init (Layout.toProgramConfig miniGitProgram)

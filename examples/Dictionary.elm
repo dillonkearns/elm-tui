@@ -45,10 +45,6 @@ run =
         , init = \entries -> ( { entries = entries, selected = Nothing }, Effect.none )
         , update = update
         , view = view
-        , bindings = \_ _ -> []
-        , status = \_ -> { waiting = Nothing }
-        , modal = \_ -> Nothing
-        , onRawEvent = Nothing
         }
         |> Layout.toScript
 

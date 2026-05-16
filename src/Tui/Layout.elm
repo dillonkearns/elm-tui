@@ -19,7 +19,7 @@ module Tui.Layout exposing
     , navigationHelpRows
     , isFilterActive, filterStatusBar, activeFilterStatusBar
     , isSearchActive, searchStatusBar
-    , program, toScript, FrameworkModel, FrameworkMsg
+    , Program, program, withBindings, withStatus, withModal, withRawEvents, toScript, toProgramConfig, FrameworkModel, FrameworkMsg
     , frameworkFocusedPane, frameworkSelectedIndex, frameworkScrollPosition, frameworkUserModel
     , RawEvent(..), ScrollDirection(..)
     , UpdateContext
@@ -151,7 +151,7 @@ j/k/arrow navigation, scroll, mouse dispatch, modals, status toasts, and the
 options bar — so your app only needs `init`, `update`, `view`, `bindings`,
 `status`, and `modal`.
 
-@docs program, toScript, FrameworkModel, FrameworkMsg
+@docs Program, program, withBindings, withStatus, withModal, withRawEvents, toScript, toProgramConfig, FrameworkModel, FrameworkMsg
 
 @docs frameworkFocusedPane, frameworkSelectedIndex, frameworkScrollPosition, frameworkUserModel
 
@@ -5216,31 +5216,54 @@ type alias PickerInteractionState =
     }
 
 
-{-| Transform a declarative TUI app configuration into a
-[`Tui.ProgramConfig`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#ProgramConfig).
+{-| An opaque, declarative TUI app. You describe WHAT (data, model, panes,
+actions); the framework handles HOW (rendering, key routing, subscriptions,
+navigation, filter, `?` help, `q`/Ctrl-C quit).
 
-The user describes WHAT (panes, actions, status, modals) and `program`
-handles HOW (rendering, key routing, subscriptions, state management). The
-result is a [`Tui.ProgramConfig`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#ProgramConfig); wrap it with
-[`Tui.program`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#program) and finalize with
-[`Tui.toScript`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#toScript) to produce a runnable `Script`, or pass it
-directly to [`Test.Tui.start`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Test-Tui#start) for pure-Elm tests.
+Build one with [`program`](#program), layer optional behavior with the
+`with*` builders, and finalize with [`toScript`](#toScript) (to run) or
+[`toProgramConfig`](#toProgramConfig) (to test):
 
     run : Script
     run =
-        Tui.program
-            (Layout.program
-                { data = loadCommits
-                , init = init
-                , update = update
-                , view = view
-                , bindings = bindings
-                , status = status
-                , modal = modal
-                , onRawEvent = Nothing
-                }
-            )
-            |> Tui.toScript
+        Layout.program
+            { data = loadCommits
+            , init = init
+            , update = update
+            , view = view
+            }
+            |> Layout.withBindings bindings
+            |> Layout.withModal modal
+            |> Layout.toScript
+
+-}
+type Program data model msg
+    = Program (ProgramFields data model msg)
+
+
+type alias ProgramFields data model msg =
+    { data : BackendTask FatalError data
+    , init : data -> ( model, LayoutEffect.Effect msg )
+    , update : UpdateContext -> msg -> model -> ( model, LayoutEffect.Effect msg )
+    , view : Tui.Context -> model -> Layout msg
+    , bindings : { focusedPane : Maybe String } -> model -> List (Group msg)
+    , status : model -> { waiting : Maybe String }
+    , modal : model -> Maybe (Modal msg)
+    , onRawEvent : Maybe (RawEvent -> msg)
+    }
+
+
+{-| Start a [`Program`](#Program) from the four essentials. Everything else
+(app keybindings, status, modals, raw-event escape hatch) is opt-in via the
+`with*` builders — a minimal app needs none of them.
+
+    Layout.program
+        { data = BackendTask.succeed ()
+        , init = \_ -> ( initialModel, Effect.none )
+        , update = update
+        , view = view
+        }
+        |> Layout.toScript
 
 The `data` BackendTask runs before `init` while the terminal is still in
 normal mode.
@@ -5251,18 +5274,92 @@ program :
     , init : data -> ( model, LayoutEffect.Effect msg )
     , update : UpdateContext -> msg -> model -> ( model, LayoutEffect.Effect msg )
     , view : Tui.Context -> model -> Layout msg
-    , bindings : { focusedPane : Maybe String } -> model -> List (Group msg)
-    , status : model -> { waiting : Maybe String }
-    , modal : model -> Maybe (Modal msg)
-    , onRawEvent : Maybe (RawEvent -> msg)
     }
-    -> Tui.ProgramConfig data (FrameworkModel model msg) (FrameworkMsg msg)
+    -> Program data model msg
 program config =
-    { data = config.data
-    , init = compileInit config
-    , update = compileUpdate config
-    , view = compileView config
-    , subscriptions = compileSubscriptions config
+    Program
+        { data = config.data
+        , init = config.init
+        , update = config.update
+        , view = config.view
+        , bindings = \_ _ -> []
+        , status = \_ -> { waiting = Nothing }
+        , modal = \_ -> Nothing
+        , onRawEvent = Nothing
+        }
+
+
+{-| Add a keybindings function. Without this, the app has no app-specific
+keybindings (the built-in navigation, filter, `?` help, and `q`/Ctrl-C quit
+still work).
+
+    Layout.program { data = ..., init = ..., update = ..., view = ... }
+        |> Layout.withBindings myBindings
+
+-}
+withBindings :
+    ({ focusedPane : Maybe String } -> model -> List (Group msg))
+    -> Program data model msg
+    -> Program data model msg
+withBindings bindings (Program fields) =
+    Program { fields | bindings = bindings }
+
+
+{-| Add a status function reporting an in-flight operation (drives the
+bottom-bar spinner). Without this, no status is shown.
+-}
+withStatus :
+    (model -> { waiting : Maybe String })
+    -> Program data model msg
+    -> Program data model msg
+withStatus status (Program fields) =
+    Program { fields | status = status }
+
+
+{-| Add a modal function. Without this, the app shows no user modals (the
+built-in `?` help overlay still works).
+
+    Layout.program { ... }
+        |> Layout.withModal myModal
+
+-}
+withModal :
+    (model -> Maybe (Modal msg))
+    -> Program data model msg
+    -> Program data model msg
+withModal modal (Program fields) =
+    Program { fields | modal = modal }
+
+
+{-| Add an escape hatch for raw key events the framework didn't otherwise
+handle. See [`RawEvent`](#RawEvent).
+-}
+withRawEvents :
+    (RawEvent -> msg)
+    -> Program data model msg
+    -> Program data model msg
+withRawEvents onRawEvent (Program fields) =
+    Program { fields | onRawEvent = Just onRawEvent }
+
+
+{-| Compile a [`program`](#program) to a
+[`Tui.ProgramConfig`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#ProgramConfig)
+— the form [`Test.Tui.start`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Test-Tui#start)
+expects for pure-Elm tests.
+
+    appTest =
+        TuiTest.start BackendTaskTest.init (Layout.toProgramConfig myProgram)
+
+-}
+toProgramConfig :
+    Program data model msg
+    -> Tui.ProgramConfig data (FrameworkModel model msg) (FrameworkMsg msg)
+toProgramConfig (Program fields) =
+    { data = fields.data
+    , init = compileInit fields
+    , update = compileUpdate fields
+    , view = compileView fields
+    , subscriptions = compileSubscriptions fields
     }
 
 
@@ -5281,9 +5378,10 @@ you also want to drive the app from `Test.Tui` — `TuiTest.start` takes the
 `program` config directly.
 
 -}
-toScript : Tui.ProgramConfig data model msg -> Pages.Script.Script
-toScript programConfig =
-    Tui.program programConfig
+toScript : Program data model msg -> Pages.Script.Script
+toScript prog =
+    toProgramConfig prog
+        |> Tui.program
         |> Tui.toScript
 
 

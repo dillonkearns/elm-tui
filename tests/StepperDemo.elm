@@ -49,11 +49,8 @@ appConfig =
         , init = \() -> ( (), Effect.none )
         , update = \_ _ model -> ( model, Effect.none )
         , view = appView
-        , bindings = \_ _ -> []
-        , status = \_ -> { waiting = Nothing }
-        , modal = \_ -> Nothing
-        , onRawEvent = Nothing
         }
+        |> Layout.toProgramConfig
 
 
 items : List String

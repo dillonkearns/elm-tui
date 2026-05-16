@@ -394,11 +394,11 @@ helpAppConfig =
         , init = helpInit
         , update = helpUpdate
         , view = helpView
-        , bindings = helpBindings
-        , status = helpStatus
-        , modal = helpModal
-        , onRawEvent = Nothing
         }
+        |> Layout.withBindings helpBindings
+        |> Layout.withStatus helpStatus
+        |> Layout.withModal helpModal
+        |> Layout.toProgramConfig
 
 
 helpAppTestWithContext : Tui.Context -> TuiTest.TuiTest (Layout.FrameworkModel HelpModel HelpMsg) (Layout.FrameworkMsg HelpMsg)
@@ -500,11 +500,11 @@ pickerAppConfig =
         , init = pickerInit
         , update = pickerUpdate
         , view = pickerView
-        , bindings = pickerBindings
-        , status = pickerStatus
-        , modal = pickerModal
-        , onRawEvent = Nothing
         }
+        |> Layout.withBindings pickerBindings
+        |> Layout.withStatus pickerStatus
+        |> Layout.withModal pickerModal
+        |> Layout.toProgramConfig
 
 
 pickerAppTest : TuiTest.TuiTest (Layout.FrameworkModel PickerModel PickerMsg) (Layout.FrameworkMsg PickerMsg)
@@ -605,11 +605,11 @@ menuAppConfig =
         , init = menuInit
         , update = menuUpdate
         , view = menuView
-        , bindings = menuBindings
-        , status = menuStatus
-        , modal = menuModal
-        , onRawEvent = Nothing
         }
+        |> Layout.withBindings menuBindings
+        |> Layout.withStatus menuStatus
+        |> Layout.withModal menuModal
+        |> Layout.toProgramConfig
 
 
 menuAppTest : TuiTest.TuiTest (Layout.FrameworkModel MenuModel MenuMsg) (Layout.FrameworkMsg MenuMsg)
@@ -691,11 +691,11 @@ linkAppConfig =
         , init = linkInit
         , update = linkUpdate
         , view = linkView
-        , bindings = linkBindings
-        , status = linkStatus
-        , modal = linkModal
-        , onRawEvent = Nothing
         }
+        |> Layout.withBindings linkBindings
+        |> Layout.withStatus linkStatus
+        |> Layout.withModal linkModal
+        |> Layout.toProgramConfig
 
 
 linkAppTest : TuiTest.TuiTest (Layout.FrameworkModel LinkModel LinkMsg) (Layout.FrameworkMsg LinkMsg)
@@ -788,11 +788,11 @@ linkSelAppConfig =
         , init = linkSelInit
         , update = linkSelUpdate
         , view = linkSelView
-        , bindings = linkSelBindings
-        , status = linkSelStatus
-        , modal = linkSelModal
-        , onRawEvent = Nothing
         }
+        |> Layout.withBindings linkSelBindings
+        |> Layout.withStatus linkSelStatus
+        |> Layout.withModal linkSelModal
+        |> Layout.toProgramConfig
 
 
 linkSelectableAppTest : TuiTest.TuiTest (Layout.FrameworkModel LinkSelModel LinkSelMsg) (Layout.FrameworkMsg LinkSelMsg)
@@ -866,11 +866,11 @@ scrollAppConfig =
         , init = scrollInit
         , update = scrollUpdate
         , view = scrollView
-        , bindings = scrollBindings
-        , status = scrollStatus
-        , modal = scrollModal
-        , onRawEvent = Nothing
         }
+        |> Layout.withBindings scrollBindings
+        |> Layout.withStatus scrollStatus
+        |> Layout.withModal scrollModal
+        |> Layout.toProgramConfig
 
 
 scrollAppTest : TuiTest.TuiTest (Layout.FrameworkModel ScrollModel ScrollMsg) (Layout.FrameworkMsg ScrollMsg)
@@ -957,11 +957,11 @@ setSelAppConfig =
         , init = setSelInit
         , update = setSelUpdate
         , view = setSelView
-        , bindings = setSelBindings
-        , status = setSelStatus
-        , modal = setSelModal
-        , onRawEvent = Nothing
         }
+        |> Layout.withBindings setSelBindings
+        |> Layout.withStatus setSelStatus
+        |> Layout.withModal setSelModal
+        |> Layout.toProgramConfig
 
 
 setSelAppTest : TuiTest.TuiTest (Layout.FrameworkModel SetSelModel SetSelMsg) (Layout.FrameworkMsg SetSelMsg)
