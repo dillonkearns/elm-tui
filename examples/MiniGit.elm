@@ -33,13 +33,11 @@ type alias Model =
 
 type ModalState
     = CommitDialog
-    | HelpDialog
 
 
 type Msg
     = SelectCommit Commit
     | OpenCommit
-    | OpenHelp
     | CloseModal
     | SubmitCommit String
 
@@ -99,9 +97,6 @@ update _ msg model =
         OpenCommit ->
             ( { model | modal = Just CommitDialog }, Effect.none )
 
-        OpenHelp ->
-            ( { model | modal = Just HelpDialog }, Effect.none )
-
         CloseModal ->
             ( { model | modal = Nothing }, Effect.none )
 
@@ -153,9 +148,7 @@ view _ model =
 bindings : { focusedPane : Maybe String } -> Model -> List (Layout.Group Msg)
 bindings _ _ =
     [ Layout.group "Global"
-        [ Layout.charBinding 'c' "Commit" OpenCommit
-        , Layout.charBinding '?' "Help" OpenHelp
-        ]
+        [ Layout.charBinding 'c' "Commit" OpenCommit ]
     ]
 
 
@@ -171,9 +164,6 @@ modal model =
                     , onCancel = CloseModal
                     }
                 )
-
-        Just HelpDialog ->
-            Just (Layout.helpModal CloseModal)
 
         Nothing ->
             Nothing

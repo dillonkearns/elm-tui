@@ -5129,6 +5129,12 @@ type FrameworkModel model msg
         , context : Tui.Context
         , modalState : ModalInteractionState msg
         , previousItemCounts : Dict String Int
+
+        -- True when the framework opened the help overlay via the built-in
+        -- `?` key (as opposed to a user-declared `Layout.helpModal`). Kept
+        -- separate so it survives background messages — `syncModalState`
+        -- only governs user-declared modals.
+        , builtInHelpOpen : Bool
         }
 
 
@@ -5343,6 +5349,7 @@ compileInit config loadedData =
         , context = defaultContext
         , modalState = NoModal
         , previousItemCounts = itemCounts
+        , builtInHelpOpen = False
         }
     , Effect.batch
         (initRuntimeEffect :: List.reverse mappedSelectEffects)
@@ -5674,13 +5681,20 @@ handleKeyPressedRouting config keyEvent (FrameworkModel fw) =
         HelpInteraction helpState ->
             case keyEvent.key of
                 Tui.Sub.Escape ->
-                    -- Fire the user's onClose message to keep their model in sync
-                    case config.modal fw.userModel of
-                        Just (HelpModal onClose) ->
-                            applyUserMsg config onClose (FrameworkModel { fw | modalState = NoModal })
+                    if fw.builtInHelpOpen then
+                        -- Framework-owned help (opened via built-in `?`):
+                        -- no user model to keep in sync.
+                        ( FrameworkModel { fw | modalState = NoModal, builtInHelpOpen = False }, Effect.none )
 
-                        _ ->
-                            ( FrameworkModel { fw | modalState = NoModal }, Effect.none )
+                    else
+                        -- User-declared Layout.helpModal: fire onClose to keep
+                        -- their model in sync.
+                        case config.modal fw.userModel of
+                            Just (HelpModal onClose) ->
+                                applyUserMsg config onClose (FrameworkModel { fw | modalState = NoModal })
+
+                            _ ->
+                                ( FrameworkModel { fw | modalState = NoModal }, Effect.none )
 
                 Tui.Sub.Character 'j' ->
                     let
@@ -5982,12 +5996,22 @@ handleKeyPressedNoModal config keyEvent (FrameworkModel fw) =
                         applyUserMsg config (toMsg (UnhandledKey keyEvent)) (FrameworkModel { fw | layoutState = newLayoutState })
 
                     Nothing ->
-                        -- Default quit: 'q' exits when nothing else claimed it.
-                        -- Bind 'q' yourself (or use onRawEvent) to override.
-                        -- Filter/search capture 'q' earlier, so this only
-                        -- fires in normal mode.
+                        -- Built-in keys, last resort: only when no user binding
+                        -- or onRawEvent claimed them, and filter/search didn't
+                        -- capture them earlier. Bind them yourself to override.
                         if keyEvent.key == Tui.Sub.Character 'q' && List.isEmpty keyEvent.modifiers then
                             ( FrameworkModel { fw | layoutState = newLayoutState }, Effect.exit )
+
+                        else if keyEvent.key == Tui.Sub.Character '?' && List.isEmpty keyEvent.modifiers then
+                            -- Open the built-in keybindings overlay.
+                            ( FrameworkModel
+                                { fw
+                                    | layoutState = newLayoutState
+                                    , modalState = HelpInteraction { filterText = "", scrollOffset = 0 }
+                                    , builtInHelpOpen = True
+                                }
+                            , Effect.none
+                            )
 
                         else
                             ( FrameworkModel { fw | layoutState = newLayoutState }, Effect.none )
@@ -6120,6 +6144,7 @@ builtInHelpRows =
     , Tui.Keybinding.infoRow "esc" "Exit mode"
     , Tui.Keybinding.infoRow ">/pgdn" "Page down"
     , Tui.Keybinding.infoRow "</pgup" "Page up"
+    , Tui.Keybinding.infoRow "?" "Show this help"
     , Tui.Keybinding.infoRow "q/ctrl+c" "Quit"
     ]
 
@@ -6172,10 +6197,17 @@ applyUserMsg config msg (FrameworkModel fw) =
         ( frameworkState, remainingEffect ) =
             extractLayoutEffects userEffect fw
 
-        -- Check if modal kind changed
+        -- Check if modal kind changed. The built-in `?` help overlay is
+        -- framework-owned, not derived from `config.modal`, so preserve it
+        -- across user messages (e.g. background BackendTask completions)
+        -- instead of letting syncModalState reset it to NoModal.
         newModalState : ModalInteractionState msg
         newModalState =
-            syncModalState config fw.modalState newUserModel
+            if fw.builtInHelpOpen then
+                fw.modalState
+
+            else
+                syncModalState config fw.modalState newUserModel
 
         -- Check for auto-reset: if item counts changed, reset selection
         newLayout : Layout msg
