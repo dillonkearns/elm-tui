@@ -128,9 +128,6 @@ view _ model =
                             ]
                 }
                 sampleCommits
-                |> Layout.withFilterable
-                    (\commit -> commit.sha ++ " " ++ commit.message)
-                    sampleCommits
             )
         , Layout.pane "diff"
             { title = "Diff", width = Layout.fillPortion 2 }

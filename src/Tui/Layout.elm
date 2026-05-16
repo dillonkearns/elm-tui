@@ -596,7 +596,21 @@ selectableListAdvanced config items =
                         Array.get i itemArray
                             |> Maybe.withDefault first
                             |> config.onSelect
-                , filterText = Nothing
+
+                -- Filterable for free: by default `/` matches the visible row
+                -- text (the view's rendered content, sans selection chrome).
+                -- `withFilterable` overrides this with custom match text.
+                , filterText =
+                    Just
+                        (\i ->
+                            Array.get i itemArray
+                                |> Maybe.map
+                                    (\item ->
+                                        config.view { selected = False, focused = False } item
+                                            |> TuiScreen.toString
+                                    )
+                                |> Maybe.withDefault ""
+                        )
                 , treeConfig = Nothing
                 , indicator = IndicatorNone
                 , selectionStyle = SelectionDefault
@@ -948,21 +962,20 @@ withSearchable paneContent =
             paneContent
 
 
-{-| Make a selectable list filterable. When the pane is focused, pressing `/`
-opens a filter input (lazygit-style). Items are matched using smart-case
-substring matching.
+{-| Override the text a selectable list filters on.
 
-    Layout.selectableList
-        { onSelect = SelectItem
-        , selected = \item -> TuiScreen.text ("▸ " ++ item)
-        , default = \item -> TuiScreen.text ("  " ++ item)
-        }
+Selectable lists are **filterable by default** — pressing `/` while the pane
+is focused opens a filter input (lazygit-style), matching the visible row
+text with smart-case substring matching. You only need this function to
+filter on something other than what's displayed (e.g. metadata not shown in
+the row), or to supply a cheaper match function for very large lists.
+
+    Layout.selectableList { onSelect = SelectItem, view = renderRow }
         items
-        |> Layout.withFilterable identity
+        |> Layout.withFilterable (\item -> item.title ++ " " ++ item.author) items
 
-The first argument converts an item to its searchable text. The second
-argument is the same items list (needed because `PaneContent` erases the
-item type).
+The first argument converts an item to its match text. The second argument
+is the same items list (needed because `PaneContent` erases the item type).
 
 -}
 withFilterable : (item -> String) -> List item -> PaneContent msg -> PaneContent msg
@@ -6139,7 +6152,7 @@ builtInHelpRows =
     , Tui.Keybinding.infoRow "j/↓" "Navigate down"
     , Tui.Keybinding.infoRow "k/↑" "Navigate up"
     , Tui.Keybinding.infoRow "tab" "Switch pane"
-    , Tui.Keybinding.infoRow "/" "Filter/Search"
+    , Tui.Keybinding.infoRow "/" "Filter list"
     , Tui.Keybinding.infoRow "n/N" "Next/prev match"
     , Tui.Keybinding.infoRow "esc" "Exit mode"
     , Tui.Keybinding.infoRow ">/pgdn" "Page down"
