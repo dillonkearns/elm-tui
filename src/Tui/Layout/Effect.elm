@@ -9,12 +9,12 @@ module Tui.Layout.Effect exposing
     , map
     )
 
-{-| Effects for apps built with [`Tui.Layout.compileApp`](Tui-Layout#compileApp).
+{-| Effects for apps built with [`Tui.Layout.program`](Tui-Layout#program).
 
 This is a superset of the core [`Tui.Effect`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui-Effect) type. It wraps the
 runtime-level effects (`perform`, `attempt`, `exit`, …) and adds
 framework-specific operations for scrolling, focus, selection, and toasts —
-operations that only make sense when the `Layout.compileApp` framework is
+operations that only make sense when the `Layout.program` framework is
 managing state on your behalf.
 
     import Tui.Layout.Effect as Effect
@@ -32,7 +32,7 @@ managing state on your behalf.
                 )
 
 If you are writing a plain TUI with [`Tui.program`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#program) and not using
-`Layout.compileApp`, use [`Tui.Effect`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui-Effect) directly — this module's
+`Layout.program`, use [`Tui.Effect`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui-Effect) directly — this module's
 framework-specific effects have no meaning outside the Layout framework.
 
 @docs Effect
@@ -75,7 +75,7 @@ import Tui.Layout.Effect.Internal as Internal exposing (Effect(..))
 
 
 {-| An effect produced by `update` or `init` in an app built with
-`Layout.compileApp`.
+`Layout.program`.
 -}
 type alias Effect msg =
     Internal.Effect msg

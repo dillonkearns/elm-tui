@@ -16,7 +16,7 @@ import Tui.Sub
 
 suite : Test
 suite =
-    describe "Layout.compileApp"
+    describe "Layout.program"
         [ describe "clickText"
             [ test "clickText finds text in second pane correctly" <|
                 \() ->
@@ -71,7 +71,7 @@ suite =
                         ]
             ]
         , describe "Bottom border"
-            [ test "compileApp renders bottom border with ╰ and ╯" <|
+            [ test "program renders bottom border with ╰ and ╯" <|
                 \() ->
                     TuiTest.expect linkAppTest
                         [ TuiTest.ensureViewHas "╰"
@@ -389,7 +389,7 @@ helpModal model =
 
 
 helpAppConfig =
-    Layout.compileApp
+    Layout.program
         { data = BackendTask.succeed ()
         , init = helpInit
         , update = helpUpdate
@@ -495,7 +495,7 @@ pickerModal model =
 
 
 pickerAppConfig =
-    Layout.compileApp
+    Layout.program
         { data = BackendTask.succeed ()
         , init = pickerInit
         , update = pickerUpdate
@@ -600,7 +600,7 @@ menuModal model =
 
 
 menuAppConfig =
-    Layout.compileApp
+    Layout.program
         { data = BackendTask.succeed ()
         , init = menuInit
         , update = menuUpdate
@@ -686,7 +686,7 @@ linkModal _ =
 
 
 linkAppConfig =
-    Layout.compileApp
+    Layout.program
         { data = BackendTask.succeed ()
         , init = linkInit
         , update = linkUpdate
@@ -783,7 +783,7 @@ linkSelModal _ =
 
 
 linkSelAppConfig =
-    Layout.compileApp
+    Layout.program
         { data = BackendTask.succeed ()
         , init = linkSelInit
         , update = linkSelUpdate
@@ -861,7 +861,7 @@ scrollModal _ =
 
 
 scrollAppConfig =
-    Layout.compileApp
+    Layout.program
         { data = BackendTask.succeed ()
         , init = scrollInit
         , update = scrollUpdate
@@ -952,7 +952,7 @@ setSelModal _ =
 
 
 setSelAppConfig =
-    Layout.compileApp
+    Layout.program
         { data = BackendTask.succeed ()
         , init = setSelInit
         , update = setSelUpdate

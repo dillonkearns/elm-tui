@@ -1,6 +1,6 @@
 module Tui.Layout.Effect.Internal exposing (Effect(..))
 
-{-| Internal effect type for `Tui.Layout.compileApp` apps. Not exposed from
+{-| Internal effect type for `Tui.Layout.program` apps. Not exposed from
 elm-tui. Kept separate from [`Tui.Layout.Effect`](Tui-Layout-Effect) so
 other elm-tui modules (`Tui.Layout`) can pattern-match on the constructors
 while the public API surface stays opaque.
@@ -9,7 +9,7 @@ while the public API surface stays opaque.
 import Tui.Effect
 
 
-{-| Layered effect type used by `Tui.Layout.compileApp`. Wraps the core
+{-| Layered effect type used by `Tui.Layout.program`. Wraps the core
 [`Tui.Effect`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui-Effect) type with framework-specific operations for
 scrolling, focus, selection, and toast notifications.
 -}

@@ -6,7 +6,7 @@ module Tui.Layout.Test exposing
     , ensureUserModel
     )
 
-{-| Test helpers for apps built with [`Layout.compileApp`](Tui-Layout#compileApp).
+{-| Test helpers for apps built with [`Layout.program`](Tui-Layout#program).
 
 These build on [`TuiTest.ensureModel`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Test-Tui#ensureModel) to query
 the opaque `FrameworkModel` for focus, selection, and scroll state — no

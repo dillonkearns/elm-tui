@@ -14,7 +14,7 @@ dispatched in priority order, and rendered as a searchable help screen.
 The same binding declarations drive [`Tui.OptionsBar`](Tui-OptionsBar) hints,
 [`Tui.CommandPalette`](Tui-CommandPalette) search, and help screen generation.
 
-When using [`Layout.compileApp`](Tui-Layout#compileApp), use the simpler
+When using [`Layout.program`](Tui-Layout#program), use the simpler
 [`Layout.group`](Tui-Layout#group) / [`Layout.binding`](Tui-Layout#binding) wrappers
 instead of importing this module directly.
 

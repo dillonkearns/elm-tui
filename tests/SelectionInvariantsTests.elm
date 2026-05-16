@@ -176,7 +176,7 @@ suite =
             [ test "Layout.init with no focusPane call: first pane renders with focused chrome" <|
                 \() ->
                     -- Reproduces the Hello.elm scenario: when an app uses
-                    -- Tui.program directly (not compileApp) and never calls
+                    -- Tui.program directly (not program) and never calls
                     -- focusPane, the first pane should still appear focused.
                     -- Focused panes have green+bold title chrome.
                     TuiTest.expect (focusFallbackApp Nothing)
@@ -246,7 +246,7 @@ twoPanes items =
 
 
 -- TEST APP for render-time focus fallback (mirrors Hello.elm's
--- Tui.program path — no Layout.compileApp involved)
+-- Tui.program path — no Layout.program involved)
 
 
 type alias FallbackModel =

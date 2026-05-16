@@ -10,7 +10,7 @@ choose from. Supports fuzzy matching, j/k navigation, and match count.
 
 For a menu where keys fire actions directly (no search), see [`Tui.Menu`](Tui-Menu).
 For a command palette that combines Picker with keybinding display, see
-[`Tui.CommandPalette`](Tui-CommandPalette). When using [`Layout.compileApp`](Tui-Layout#compileApp),
+[`Tui.CommandPalette`](Tui-CommandPalette). When using [`Layout.program`](Tui-Layout#program),
 prefer [`Layout.pickerModal`](Tui-Layout#pickerModal) which handles key routing for you.
 
     -- Open a picker:

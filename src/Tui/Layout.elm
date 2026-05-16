@@ -19,7 +19,7 @@ module Tui.Layout exposing
     , navigationHelpRows
     , isFilterActive, filterStatusBar, activeFilterStatusBar
     , isSearchActive, searchStatusBar
-    , compileApp, FrameworkModel, FrameworkMsg
+    , program, FrameworkModel, FrameworkMsg
     , frameworkFocusedPane, frameworkSelectedIndex, frameworkScrollPosition, frameworkUserModel
     , RawEvent(..), ScrollDirection(..)
     , UpdateContext
@@ -52,7 +52,7 @@ indices, and terminal dimensions in an opaque `State`. The user stores one
             |> Layout.toScreen (Layout.withContext ctx model.layout)
 
 For a batteries-included setup that wires key routing, focus management,
-modals, and status together automatically, see [`compileApp`](#compileApp).
+modals, and status together automatically, see [`program`](#program).
 
 
 ## Building Layouts
@@ -79,7 +79,7 @@ focused-pane background) to the selected row. Customize via:
 
 Declarative modals powered by [`Tui.Modal`](Tui-Modal), [`Tui.Picker`](Tui-Picker),
 [`Tui.Menu`](Tui-Menu), [`Tui.Confirm`](Tui-Confirm), and [`Tui.Prompt`](Tui-Prompt).
-These are convenience wrappers for use with [`compileApp`](#compileApp) — the framework
+These are convenience wrappers for use with [`program`](#program) — the framework
 handles opening, closing, and key routing automatically.
 
 @docs Modal, promptModal, confirmModal, pickerModal, menuModal, helpModal
@@ -144,14 +144,14 @@ See [`Tui.Keybinding`](Tui-Keybinding) for the standalone keybinding system.
 @docs isSearchActive, searchStatusBar
 
 
-## compileApp — Batteries-Included Framework
+## program — Batteries-Included Framework
 
-[`compileApp`](#compileApp) wires together key routing, focus management (Tab/Shift-Tab),
+[`program`](#program) wires together key routing, focus management (Tab/Shift-Tab),
 j/k/arrow navigation, scroll, mouse dispatch, modals, status toasts, and the
 options bar — so your app only needs `init`, `update`, `view`, `bindings`,
 `status`, and `modal`.
 
-@docs compileApp, FrameworkModel, FrameworkMsg
+@docs program, FrameworkModel, FrameworkMsg
 
 @docs frameworkFocusedPane, frameworkSelectedIndex, frameworkScrollPosition, frameworkUserModel
 
@@ -5037,7 +5037,7 @@ resolveWidths totalWidth widthSpecs =
 
 
 {-| A raw terminal event that wasn't consumed by the framework's built-in
-handling. Use `onRawEvent` in `compileApp` to receive these.
+handling. Use `onRawEvent` in `program` to receive these.
 
   - `UnhandledKey` — a key press that didn't match any built-in nav key,
     Layout filter/search key, or user binding.
@@ -5060,7 +5060,7 @@ type ScrollDirection
     | ScrollingDown
 
 
-{-| Context passed to the `update` function in `compileApp`. Provides
+{-| Context passed to the `update` function in `program`. Provides
 read-only access to framework-managed layout state.
 
   - `context` — terminal width, height, and color profile
@@ -5163,7 +5163,7 @@ type alias PickerInteractionState =
 {-| Transform a declarative TUI app configuration into a
 [`Tui.ProgramConfig`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#ProgramConfig).
 
-The user describes WHAT (panes, actions, status, modals) and `compileApp`
+The user describes WHAT (panes, actions, status, modals) and `program`
 handles HOW (rendering, key routing, subscriptions, state management). The
 result is a [`Tui.ProgramConfig`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#ProgramConfig); wrap it with
 [`Tui.program`](https://package.elm-lang.org/packages/dillonkearns/elm-pages/latest/Tui#program) and finalize with
@@ -5173,7 +5173,7 @@ directly to [`Test.Tui.start`](https://package.elm-lang.org/packages/dillonkearn
     run : Script
     run =
         Tui.program
-            (Layout.compileApp
+            (Layout.program
                 { data = loadCommits
                 , init = init
                 , update = update
@@ -5190,7 +5190,7 @@ The `data` BackendTask runs before `init` while the terminal is still in
 normal mode.
 
 -}
-compileApp :
+program :
     { data : BackendTask FatalError data
     , init : data -> ( model, LayoutEffect.Effect msg )
     , update : UpdateContext -> msg -> model -> ( model, LayoutEffect.Effect msg )
@@ -5201,7 +5201,7 @@ compileApp :
     , onRawEvent : Maybe (RawEvent -> msg)
     }
     -> Tui.ProgramConfig data (FrameworkModel model msg) (FrameworkMsg msg)
-compileApp config =
+program config =
     { data = config.data
     , init = compileInit config
     , update = compileUpdate config
@@ -5426,7 +5426,7 @@ compileUpdate config fwMsg (FrameworkModel fw) =
                     , colorProfile = fw.context.colorProfile
                     }
 
-                -- Layout state gets height - 1 because compileApp reserves
+                -- Layout state gets height - 1 because program reserves
                 -- 1 row for the bottom bar. This ensures navigateDown/Up
                 -- compute the correct visible height for auto-scroll.
                 layoutContext : { width : Int, height : Int }

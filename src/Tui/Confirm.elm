@@ -13,7 +13,7 @@ Two modes:
   - **Prompt**: Text input with title. Enter submits text, Escape cancels.
 
 For text input with masking or suggestions, see [`Tui.Prompt`](Tui-Prompt) instead.
-When using [`Layout.compileApp`](Tui-Layout#compileApp), prefer
+When using [`Layout.program`](Tui-Layout#program), prefer
 [`Layout.confirmModal`](Tui-Layout#confirmModal) and
 [`Layout.promptModal`](Tui-Layout#promptModal) which handle key routing for you.
 

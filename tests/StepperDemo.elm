@@ -44,7 +44,7 @@ type Msg
 
 
 appConfig =
-    Layout.compileApp
+    Layout.program
         { data = BackendTask.succeed ()
         , init = \() -> ( (), Effect.none )
         , update = \_ _ model -> ( model, Effect.none )
