@@ -27,6 +27,7 @@ popup system. Modal height is capped at 75% of terminal height.
 import Ansi.Color
 import Tui
 import Tui.Screen
+import Tui.Screen.Advanced as Advanced
 
 
 {-| Calculate a good default modal width for the given terminal width.
@@ -141,10 +142,37 @@ overlay config term bgRows =
 
         -- Composite a modal strip onto a background row:
         -- [background left edge] [modal content] [right fill]
+        --
+        -- Pane rows are padded with trailing spaces out to the full terminal
+        -- width, so the part of a row hidden by the modal is often nothing but
+        -- whitespace. Trimming that padding before clipping means
+        -- `truncateWidth` only emits its `…` indicator when *real* content
+        -- genuinely continues under the modal — empty rows beneath a list (and
+        -- short rows that fit entirely to the left) stay clean.
+        leftEdge : Tui.Screen.Screen -> Tui.Screen.Screen
+        leftEdge bgRow =
+            let
+                trimmed : Tui.Screen.Screen
+                trimmed =
+                    trimRight bgRow
+
+                visibleWidth : Int
+                visibleWidth =
+                    String.length (Tui.Screen.toString trimmed)
+            in
+            if visibleWidth <= leftPad then
+                Tui.Screen.concat
+                    [ trimmed
+                    , Tui.Screen.text (String.repeat (leftPad - visibleWidth) " ")
+                    ]
+
+            else
+                Tui.Screen.truncateWidth leftPad trimmed
+
         compositeRow : Tui.Screen.Screen -> Tui.Screen.Screen -> Tui.Screen.Screen
         compositeRow bgRow modalStrip =
             Tui.Screen.concat
-                [ Tui.Screen.truncateWidth leftPad bgRow
+                [ leftEdge bgRow
                 , modalStrip
                 , Tui.Screen.text
                     (String.repeat (term.width - leftPad - modalWidth) " ")
@@ -233,3 +261,40 @@ overlay config term bgRows =
                 bgRow
         )
         bgRows
+
+
+{-| Drop trailing whitespace from a rendered row while preserving the styling
+of the content that remains. Operates on the first rendered line; rows produced
+by the layout are always single-line strips.
+-}
+trimRight : Tui.Screen.Screen -> Tui.Screen.Screen
+trimRight screen =
+    case Advanced.toLines screen of
+        [] ->
+            Tui.Screen.empty
+
+        line :: _ ->
+            line
+                |> List.reverse
+                |> dropTrailingBlankSpans
+                |> List.reverse
+                |> Advanced.fromLine
+
+
+dropTrailingBlankSpans : List Advanced.Span -> List Advanced.Span
+dropTrailingBlankSpans reversedSpans =
+    case reversedSpans of
+        [] ->
+            []
+
+        span :: rest ->
+            let
+                trimmedText : String
+                trimmedText =
+                    String.trimRight span.text
+            in
+            if trimmedText == "" then
+                dropTrailingBlankSpans rest
+
+            else
+                { span | text = trimmedText } :: rest
